@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>מעבר דירה — דור ובר</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.4/babel.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Assistant', system-ui, sans-serif; }
+    html, body, #root { height: 100%; }
+    body { margin: 0; background: #f8fafc; -webkit-tap-highlight-color: transparent; }
+    input, textarea { outline: none; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+    @keyframes pop { 0% { transform: scale(.96); opacity: .4 } 100% { transform: scale(1); opacity: 1 } }
+    .pop { animation: pop .18s ease-out; }
+    @keyframes slidein { from { transform: translateX(-16px); opacity: 0 } to { transform: translateX(0); opacity: 1 } }
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    /* =====================================================================
+       ⚙️  הגדרות FIREBASE — הדבק כאן את הבלוק מהפרויקט שלך (ראה קובץ ההוראות)
+       ===================================================================== */
+    const firebaseConfig = {
+  apiKey: "AIzaSyC-IENp0i5ZS0NLYWSKLzkRU6pWxZFpL6M",
+  authDomain: "moving-dor-bar.firebaseapp.com",
+  projectId: "moving-dor-bar",
+  storageBucket: "moving-dor-bar.firebasestorage.app",
+  messagingSenderId: "583525705273",
+  appId: "1:583525705273:web:fdae3b0c443ae859cd0fe8",
+  measurementId: "G-HWPTF08VXP"
+    };
+    /* ===================================================================== */
+
+    let db = null, initError = null;
+    const notPlaceholder = (s) => s && !String(s).startsWith("PASTE_");
+    const isConfigured = notPlaceholder(firebaseConfig.apiKey) && notPlaceholder(firebaseConfig.projectId);
+    try { if (isConfigured) { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); } }
+    catch (e) { initError = e.message; }
+
+    const sectionDoc = (k) => db.collection('moving').doc(k);
+    const boxesCol   = () => db.collection('moving_boxes');
+
+    /* ---------------- icons ---------------- */
+    const Svg = (p) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={p.size||20} height={p.size||20}
+        viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.sw||2}
+        strokeLinecap="round" strokeLinejoin="round" className={p.className}>{p.children}</svg>
+    );
+    const Icon = {
+      X:(p)=><Svg {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></Svg>,
+      Plus:(p)=><Svg {...p}><path d="M5 12h14"/><path d="M12 5v14"/></Svg>,
+      Check:(p)=><Svg {...p}><path d="M20 6 9 17l-5-5"/></Svg>,
+      Menu:(p)=><Svg {...p}><path d="M4 12h16"/><path d="M4 6h16"/><path d="M4 18h16"/></Svg>,
+      Refresh:(p)=><Svg {...p}><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></Svg>,
+      Home:(p)=><Svg {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></Svg>,
+      Box:(p)=><Svg {...p}><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></Svg>,
+      Cart:(p)=><Svg {...p}><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></Svg>,
+      Truck:(p)=><Svg {...p}><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></Svg>,
+      Pin:(p)=><Svg {...p}><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></Svg>,
+      List:(p)=><Svg {...p}><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></Svg>,
+      Wallet:(p)=><Svg {...p}><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></Svg>,
+      Search:(p)=><Svg {...p}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></Svg>,
+      Reset:(p)=><Svg {...p}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></Svg>,
+      User:(p)=><Svg {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Svg>,
+      Cloud:(p)=><Svg {...p}><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></Svg>,
+      Alert:(p)=><Svg {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></Svg>,
+    };
+
+    /* ---------------- defaults ---------------- */
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+    const li = (text) => ({ id: uid(), text, done: false });
+    const K = { addr_shared:'address_shared', addr_dor:'address_dor', addr_bar:'address_bar', logistics:'logistics', prep:'prep', purchases:'purchases', movers:'movers' };
+    const D = {
+      address_shared: ['בנק לאומי','ביטוח דירה','משרד הפנים','מים (תאגיד המים)','חשמל','גז','ארנונה','דואר ישראל'].map(li),
+      address_dor: ['מקום העבודה של דור','מנורה (פנסיה, השתלמות, גמל)','מור (השתלמות, גמל)','ילין לפידות (השתלמות)','הפניקס (השתלמות, גמל)','אקסלנס טרייד (תיק השקעות)'].map(li),
+      address_bar: ['מקום העבודה של בר','מיטב (פנסיה)','ילין לפידות (השתלמות)','מור (גמל)'].map(li),
+      logistics: ['הזמנת ארגזים','מיון פריטים','הכנת "תיק הישרדות"'].map(li),
+      prep: ['תיאום ניקיון','הדברה','קריאת מונים (דירה ישנה)','קריאת מונים (דירה חדשה)'].map(li),
+      purchases: [ {id:uid(), text:'מקרר', cost:0, done:false}, {id:uid(), text:'ארון כביסה', cost:0, done:false} ],
+      movers: { company:'', contact:'', cost:0, paid:0, date:'', notes:'' },
+    };
+
+    /* ---------------- reusable bits ---------------- */
+    function DeleteBtn({ onClick, title='מחיקה' }) {
+      return (
+        <button title={title} onClick={(e)=>{ e.stopPropagation(); onClick(); }}
+          className="shrink-0 w-7 h-7 grid place-items-center rounded-full bg-slate-100 text-slate-400 hover:bg-rose-500 hover:text-white transition-colors">
+          <Icon.X size={15} sw={2.4} />
+        </button>
+      );
+    }
+    function AddRow({ placeholder, onAdd, accent='blue' }) {
+      const [v, setV] = useState('');
+      const submit = () => { const t=v.trim(); if(!t) return; onAdd(t); setV(''); };
+      const ring = { blue:'focus:ring-blue-400', purple:'focus:ring-purple-400', amber:'focus:ring-amber-400', emerald:'focus:ring-emerald-400', rose:'focus:ring-rose-400' }[accent];
+      const btn = { blue:'bg-blue-600 hover:bg-blue-700', purple:'bg-purple-600 hover:bg-purple-700', amber:'bg-amber-500 hover:bg-amber-600', emerald:'bg-emerald-600 hover:bg-emerald-700', rose:'bg-rose-600 hover:bg-rose-700' }[accent];
+      return (
+        <div className="flex gap-2">
+          <input value={v} onChange={e=>setV(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()} placeholder={placeholder}
+            className={`flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 ${ring} focus:border-transparent transition`} />
+          <button onClick={submit} className={`shrink-0 ${btn} text-white rounded-xl px-3.5 grid place-items-center transition-colors`}><Icon.Plus size={18}/></button>
+        </div>
+      );
+    }
+    function ChecklistItem({ item, onToggle, onDelete, accent='blue' }) {
+      const ring = { blue:'bg-blue-600 border-blue-600', purple:'bg-purple-600 border-purple-600', amber:'bg-amber-500 border-amber-500', emerald:'bg-emerald-600 border-emerald-600', rose:'bg-rose-600 border-rose-600' }[accent];
+      return (
+        <div onClick={onToggle} className="pop group flex items-center gap-3 bg-white border border-slate-100 rounded-xl px-3.5 py-3 shadow-sm hover:shadow cursor-pointer select-none transition">
+          <span className={`shrink-0 w-5 h-5 rounded-md border-2 grid place-items-center transition-colors ${item.done ? ring : 'border-slate-300 bg-white'}`}>
+            {item.done && <Icon.Check size={13} className="text-white" sw={3} />}
+          </span>
+          <span className={`flex-1 text-[15px] leading-tight transition-colors ${item.done ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{item.text}</span>
+          <DeleteBtn onClick={onDelete} />
+        </div>
+      );
+    }
+    function Card({ title, subtitle, icon, accent='blue', children }) {
+      const head = { blue:'text-blue-600 bg-blue-50', purple:'text-purple-600 bg-purple-50', amber:'text-amber-600 bg-amber-50', emerald:'text-emerald-600 bg-emerald-50', rose:'text-rose-600 bg-rose-50' }[accent];
+      return (
+        <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 sm:p-5">
+          <header className="flex items-center gap-3 mb-4">
+            <span className={`w-9 h-9 rounded-xl grid place-items-center ${head}`}>{icon}</span>
+            <div>
+              <h3 className="font-bold text-slate-800 leading-none">{title}</h3>
+              {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
+            </div>
+          </header>
+          {children}
+        </section>
+      );
+    }
+    function ListBlock({ title, subtitle, icon, accent, items, onChange }) {
+      const add = (text) => onChange([...items, li(text)]);
+      const toggle = (id) => onChange(items.map(x=>x.id===id?{...x,done:!x.done}:x));
+      const del = (id) => onChange(items.filter(x=>x.id!==id));
+      const done = items.filter(x=>x.done).length;
+      return (
+        <Card title={title} subtitle={`${done}/${items.length} הושלמו`} icon={icon} accent={accent}>
+          <div className="space-y-2 mb-3">
+            {items.length===0 && <p className="text-sm text-slate-400 py-4 text-center">אין פריטים עדיין — הוסיפו למטה.</p>}
+            {items.map(it => <ChecklistItem key={it.id} item={it} accent={accent} onToggle={()=>toggle(it.id)} onDelete={()=>del(it.id)} />)}
+          </div>
+          <AddRow placeholder="הוספת פריט חדש…" onAdd={add} accent={accent} />
+        </Card>
+      );
+    }
+
+    /* ---------------- views ---------------- */
+    const Row = ({label, val}) => (
+      <div className="flex justify-between items-center py-2.5 text-sm"><span className="text-slate-500">{label}</span><span className="font-semibold text-slate-700">{val}</span></div>
+    );
+    function Dashboard({ allTasks, boxes, movers, purchases }) {
+      const totalTasks = allTasks.length, doneTasks = allTasks.filter(t=>t.done).length;
+      const pct = totalTasks ? Math.round(doneTasks/totalTasks*100) : 0;
+      const purchasesSum = purchases.reduce((s,p)=>s+(Number(p.cost)||0),0);
+      const moversCost = Number(movers.cost)||0, grand = moversCost + purchasesSum;
+      const fmt = (n)=>'₪'+ (Number(n)||0).toLocaleString('he-IL');
+      const Stat = ({label, value, icon, accent}) => {
+        const c = { blue:'text-blue-600 bg-blue-50', emerald:'text-emerald-600 bg-emerald-50', amber:'text-amber-600 bg-amber-50', purple:'text-purple-600 bg-purple-50' }[accent];
+        return (
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-3">
+            <span className={`w-11 h-11 rounded-xl grid place-items-center ${c}`}>{icon}</span>
+            <div className="min-w-0"><p className="text-xs text-slate-400">{label}</p><p className="font-extrabold text-slate-800 text-lg leading-tight truncate">{value}</p></div>
+          </div>
+        );
+      };
+      return (
+        <div className="space-y-4">
+          <section className="bg-gradient-to-l from-blue-600 to-indigo-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-200/50">
+            <div className="flex items-center justify-between mb-1"><h2 className="font-extrabold text-xl">התקדמות כללית</h2><span className="font-extrabold text-2xl">{pct}%</span></div>
+            <p className="text-blue-100 text-sm mb-3">{doneTasks} מתוך {totalTasks} משימות הושלמו</p>
+            <div className="h-3 bg-white/25 rounded-full overflow-hidden"><div className="h-full bg-white rounded-full transition-all duration-500" style={{width: pct+'%'}} /></div>
+          </section>
+          <div className="grid grid-cols-2 gap-3">
+            <Stat label="ארגזים ארוזים" value={boxes.length} icon={<Icon.Box size={22}/>} accent="emerald" />
+            <Stat label="עלות מובילים" value={fmt(moversCost)} icon={<Icon.Truck size={22}/>} accent="amber" />
+            <Stat label="סה״כ רכישות" value={fmt(purchasesSum)} icon={<Icon.Cart size={22}/>} accent="purple" />
+            <Stat label="סה״כ עלויות" value={fmt(grand)} icon={<Icon.Wallet size={22}/>} accent="blue" />
+          </div>
+          <Card title="סיכום תקציב" subtitle="מובילים + רכישות" icon={<Icon.Wallet size={18}/>} accent="blue">
+            <div className="divide-y divide-slate-100">
+              <Row label="מובילים" val={fmt(moversCost)} />
+              <Row label="רכישות" val={fmt(purchasesSum)} />
+              <div className="flex justify-between items-center pt-3 mt-1"><span className="font-extrabold text-slate-800">סה״כ להוצאה</span><span className="font-extrabold text-blue-600 text-lg">{fmt(grand)}</span></div>
+            </div>
+          </Card>
+        </div>
+      );
+    }
+    function AddressView({ shared, dor, bar, set }) {
+      return (
+        <div className="space-y-4">
+          <ListBlock title="שינויי כתובת — משותף" icon={<Icon.Home size={18}/>} accent="purple" items={shared} onChange={v=>set(K.addr_shared, v)} />
+          <ListBlock title="הכספים של דור" icon={<Icon.User size={18}/>} accent="blue" items={dor} onChange={v=>set(K.addr_dor, v)} />
+          <ListBlock title="הכספים של בר" icon={<Icon.User size={18}/>} accent="rose" items={bar} onChange={v=>set(K.addr_bar, v)} />
+        </div>
+      );
+    }
+    function LogisticsView({ logistics, prep, set }) {
+      return (
+        <div className="space-y-4">
+          <ListBlock title="לוגיסטיקה" icon={<Icon.List size={18}/>} accent="amber" items={logistics} onChange={v=>set(K.logistics, v)} />
+          <ListBlock title="הכנת הדירה" icon={<Icon.Home size={18}/>} accent="emerald" items={prep} onChange={v=>set(K.prep, v)} />
+        </div>
+      );
+    }
+    function BoxCard({ box, onName, onAddItem, onDelItem, onDelBox }) {
+      const [t, setT] = useState('');
+      const add = () => { const v=t.trim(); if(!v) return; onAddItem(v); setT(''); };
+      return (
+        <section className="pop bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <header className="flex items-center gap-3 p-4 bg-emerald-50/60">
+            <span className="shrink-0 w-10 h-10 rounded-xl bg-emerald-600 text-white grid place-items-center font-extrabold">{box.number}</span>
+            <input data-synckey="boxes" value={box.name} onChange={e=>onName(e.target.value)} placeholder="שם הארגז (למשל: מטבח)"
+              className="flex-1 min-w-0 bg-transparent font-bold text-slate-800 text-[15px] placeholder:text-slate-400 placeholder:font-medium" />
+            <DeleteBtn onClick={onDelBox} title="מחיקת ארגז" />
+          </header>
+          <div className="p-4 pt-3">
+            <div className="space-y-1.5 mb-3">
+              {box.items.length===0 && <p className="text-xs text-slate-400 text-center py-2">אין פריטים בארגז</p>}
+              {box.items.map(it=>(
+                <div key={it.id} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                  <span className="flex-1 text-sm text-slate-600">{it.text}</span>
+                  <DeleteBtn onClick={()=>onDelItem(it.id)} />
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input value={t} onChange={e=>setT(e.target.value)} onKeyDown={e=>e.key==='Enter'&&add()} placeholder="הוספת פריט…"
+                className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-emerald-400 focus:border-transparent" />
+              <button onClick={add} className="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-3.5 grid place-items-center"><Icon.Plus size={18}/></button>
+            </div>
+          </div>
+        </section>
+      );
+    }
+    function BoxesView({ boxes, addBox, updateBox, delBox }) {
+      const [q, setQ] = useState('');
+      const filtered = boxes.filter(b=>{
+        const s=q.trim().toLowerCase(); if(!s) return true;
+        return String(b.number).includes(s) || (b.name||'').toLowerCase().includes(s) || (b.items||[]).some(it=>it.text.toLowerCase().includes(s));
+      });
+      return (
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <div className="flex-1 relative">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"><Icon.Search size={18}/></span>
+              <input value={q} onChange={e=>setQ(e.target.value)} placeholder="חיפוש לפי מספר, שם או פריט…"
+                className="w-full bg-white border border-slate-200 rounded-xl pr-10 pl-3.5 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-emerald-400 focus:border-transparent" />
+            </div>
+            <button onClick={addBox} className="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-4 flex items-center gap-1.5 font-semibold text-sm shadow-sm"><Icon.Plus size={18}/> ארגז</button>
+          </div>
+          {boxes.length===0 && <p className="text-center text-slate-400 text-sm py-10">אין ארגזים עדיין. לחצו "ארגז" כדי להוסיף.</p>}
+          {boxes.length>0 && filtered.length===0 && <p className="text-center text-slate-400 text-sm py-10">לא נמצאו ארגזים תואמים.</p>}
+          <div className="space-y-3">
+            {filtered.map(b=>(
+              <BoxCard key={b.id} box={b}
+                onName={(name)=>updateBox({...b, name})}
+                onAddItem={(text)=>updateBox({...b, items:[...(b.items||[]), {id:uid(), text}]})}
+                onDelItem={(iid)=>updateBox({...b, items:(b.items||[]).filter(x=>x.id!==iid)})}
+                onDelBox={()=>delBox(b.id)} />
+            ))}
+          </div>
+        </div>
+      );
+    }
+    function PurchasesView({ items, set }) {
+      const change = (v)=>set(K.purchases, v);
+      const add = (text)=>change([...items, {id:uid(), text, cost:0, done:false}]);
+      const total = items.reduce((s,p)=>s+(Number(p.cost)||0),0);
+      const fmt = (n)=>'₪'+ (Number(n)||0).toLocaleString('he-IL');
+      return (
+        <div className="space-y-4">
+          <section className="bg-gradient-to-l from-rose-500 to-pink-500 rounded-2xl p-5 text-white shadow-lg shadow-rose-200/50 flex items-center justify-between">
+            <div><p className="text-rose-100 text-sm">סה״כ רכישות</p><p className="font-extrabold text-2xl">{fmt(total)}</p></div>
+            <Icon.Cart size={34} className="text-white/70"/>
+          </section>
+          <Card title="רשימת רכישות" icon={<Icon.Cart size={18}/>} accent="rose">
+            <div className="space-y-2 mb-3">
+              {items.length===0 && <p className="text-sm text-slate-400 py-4 text-center">אין רכישות עדיין.</p>}
+              {items.map(p=>(
+                <div key={p.id} className="flex items-center gap-2.5 bg-white border border-slate-100 rounded-xl px-3 py-2.5 shadow-sm">
+                  <button onClick={()=>change(items.map(x=>x.id===p.id?{...x,done:!x.done}:x))} className={`shrink-0 w-5 h-5 rounded-md border-2 grid place-items-center ${p.done?'bg-rose-600 border-rose-600':'border-slate-300'}`}>
+                    {p.done && <Icon.Check size={13} className="text-white" sw={3}/>}
+                  </button>
+                  <span className={`flex-1 text-[15px] ${p.done?'line-through text-slate-400':'text-slate-700'}`}>{p.text}</span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="text-slate-400 text-sm">₪</span>
+                    <input data-synckey="purchases" type="number" value={p.cost||''} placeholder="0"
+                      onChange={e=>change(items.map(x=>x.id===p.id?{...x,cost:e.target.value}:x))}
+                      className="w-20 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-sm text-left" />
+                  </div>
+                  <DeleteBtn onClick={()=>change(items.filter(x=>x.id!==p.id))} />
+                </div>
+              ))}
+            </div>
+            <AddRow placeholder="הוספת פריט לרכישה…" onAdd={add} accent="rose" />
+          </Card>
+        </div>
+      );
+    }
+    function MoversView({ movers, set }) {
+      const upd = (patch)=>set(K.movers, {...movers, ...patch});
+      const F = ({label, children}) => (<label className="block"><span className="block text-sm font-semibold text-slate-600 mb-1.5">{label}</span>{children}</label>);
+      const inp = "w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent";
+      const remaining = (Number(movers.cost)||0) - (Number(movers.paid)||0);
+      return (
+        <div className="space-y-4">
+          <Card title="פרטי חברת ההובלה" icon={<Icon.Truck size={18}/>} accent="amber">
+            <div className="space-y-3">
+              <F label="שם החברה"><input data-synckey="movers" className={inp} value={movers.company} onChange={e=>upd({company:e.target.value})} placeholder="שם חברת ההובלה"/></F>
+              <F label="איש קשר / טלפון"><input data-synckey="movers" className={inp} value={movers.contact} onChange={e=>upd({contact:e.target.value})} placeholder="שם וטלפון"/></F>
+              <F label="תאריך ושעה"><input data-synckey="movers" className={inp} value={movers.date} onChange={e=>upd({date:e.target.value})} placeholder="למשל: 15/08 בשעה 09:00"/></F>
+              <div className="grid grid-cols-2 gap-3">
+                <F label="עלות כוללת (₪)"><input data-synckey="movers" type="number" className={inp+' text-left'} value={movers.cost||''} onChange={e=>upd({cost:e.target.value})} placeholder="0"/></F>
+                <F label="מקדמה ששולמה (₪)"><input data-synckey="movers" type="number" className={inp+' text-left'} value={movers.paid||''} onChange={e=>upd({paid:e.target.value})} placeholder="0"/></F>
+              </div>
+              <div className="flex justify-between items-center bg-amber-50 rounded-xl px-4 py-3"><span className="text-sm font-semibold text-amber-700">יתרה לתשלום</span><span className="font-extrabold text-amber-700">₪{(remaining).toLocaleString('he-IL')}</span></div>
+              <F label="הערות"><textarea data-synckey="movers" rows="3" className={inp} value={movers.notes} onChange={e=>upd({notes:e.target.value})} placeholder="הערות, פריטים מיוחדים, מדרגות…"/></F>
+            </div>
+          </Card>
+        </div>
+      );
+    }
+
+    /* ---------------- setup gate ---------------- */
+    function SetupGate({ error }) {
+      return (
+        <div className="h-full overflow-y-auto p-6 grid place-items-center">
+          <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 shadow-sm p-6 text-center">
+            <span className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-500 grid place-items-center mx-auto mb-4"><Icon.Alert size={28}/></span>
+            <h1 className="font-extrabold text-xl text-slate-800 mb-2">חסרות הגדרות Firebase</h1>
+            <p className="text-sm text-slate-500 leading-relaxed mb-4">
+              כדי שהאפליקציה תשמור ותסנכרן בין דור ובר, צריך להדביק את בלוק ההגדרות של פרויקט ה‑Firebase שלך בתוך קובץ ה‑HTML (במקום שמסומן <b>PASTE_</b>).
+              עקבו אחרי קובץ ההוראות שצורף.
+            </p>
+            {error && <p className="text-xs text-rose-500 bg-rose-50 rounded-lg p-2 mt-2 break-words">{error}</p>}
+          </div>
+        </div>
+      );
+    }
+
+    /* ---------------- sync status ---------------- */
+    function SyncStatus({ time, connErr, seeding }) {
+      const ok = !connErr;
+      return (
+        <div className="bg-slate-50 rounded-xl p-3 flex items-center gap-2.5">
+          <span className={`w-8 h-8 grid place-items-center rounded-lg ${ok?'bg-emerald-100 text-emerald-600':'bg-rose-100 text-rose-500'}`}>{ok ? <Icon.Cloud size={16}/> : <Icon.Alert size={16}/>}</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] leading-none flex items-center gap-1.5">
+              <span className={`w-1.5 h-1.5 rounded-full ${ok?'bg-emerald-500':'bg-rose-500'}`}></span>
+              <span className="text-slate-400">{ok ? 'מחובר · בזמן אמת' : 'אין חיבור'}</span>
+            </p>
+            <p className="text-xs font-semibold text-slate-600 mt-1">{seeding ? 'מסנכרן…' : 'עודכן: ' + time}</p>
+          </div>
+        </div>
+      );
+    }
+
+    /* ---------------- app ---------------- */
+    const TABS = [
+      { id:'dash', label:'סקירה ותקציב', icon:<Icon.Home size={20}/> },
+      { id:'addr', label:'שינויי כתובת', icon:<Icon.Pin size={20}/> },
+      { id:'log',  label:'לוגיסטיקה והכנה', icon:<Icon.List size={20}/> },
+      { id:'box',  label:'ניהול ארגזים', icon:<Icon.Box size={20}/> },
+      { id:'buy',  label:'רכישות', icon:<Icon.Cart size={20}/> },
+      { id:'mov',  label:'מובילים', icon:<Icon.Truck size={20}/> },
+    ];
+
+    function App() {
+      if (!db) return <SetupGate error={initError} />;
+
+      const [ready, setReady] = useState(false);
+      const [tab, setTab] = useState('dash');
+      const [drawer, setDrawer] = useState(false);
+      const [lastSync, setLastSync] = useState(null);
+      const [saveErr, setSaveErr] = useState(false);
+      const [connErr, setConnErr] = useState(false);
+      const [pulse, setPulse] = useState(false);
+
+      const [addrShared, setAddrShared] = useState(D.address_shared);
+      const [addrDor, setAddrDor] = useState(D.address_dor);
+      const [addrBar, setAddrBar] = useState(D.address_bar);
+      const [logistics, setLogistics] = useState(D.logistics);
+      const [prep, setPrep] = useState(D.prep);
+      const [purchases, setPurchases] = useState(D.purchases);
+      const [movers, setMovers] = useState(D.movers);
+      const [boxes, setBoxes] = useState([]);
+
+      const setterFor = (k)=>({ address_shared:setAddrShared, address_dor:setAddrDor, address_bar:setAddrBar, logistics:setLogistics, prep:setPrep, purchases:setPurchases, movers:setMovers }[k]);
+      const timers = useRef({});
+      const editingKeys = useRef(new Set());
+      const pendingSnap = useRef({});
+      const firstSeen = useRef(new Set());
+
+      const flashErr = () => { setSaveErr(true); setTimeout(()=>setSaveErr(false), 3500); };
+      const flashPulse = () => { setPulse(true); setTimeout(()=>setPulse(false), 700); };
+
+      const applyNow = (key, value) => { if (key==='boxes') setBoxes(value); else { const s=setterFor(key); if (s) s(value); } };
+      const applyMaybe = (key, value) => { if (editingKeys.current.has(key)) pendingSnap.current[key] = value; else applyNow(key, value); };
+
+      // realtime listeners
+      useEffect(() => {
+        const unsubs = [];
+        Object.keys(D).forEach(key => {
+          const u = sectionDoc(key).onSnapshot(
+            (snap) => {
+              setConnErr(false);
+              if (!snap.exists) { sectionDoc(key).set({ v: D[key] }).catch(flashErr); applyMaybe(key, D[key]); }
+              else { applyMaybe(key, snap.data().v); setLastSync(Date.now()); flashPulse(); }
+              if (!firstSeen.current.has(key)) { firstSeen.current.add(key); if (firstSeen.current.size >= Object.keys(D).length) setReady(true); }
+            },
+            (err) => { setConnErr(true); setReady(true); }
+          );
+          unsubs.push(u);
+        });
+        const ub = boxesCol().orderBy('number').onSnapshot(
+          (snap) => { setConnErr(false); const arr = snap.docs.map(d=>({ id:d.id, ...d.data() })); applyMaybe('boxes', arr); setLastSync(Date.now()); flashPulse(); },
+          (err) => { setConnErr(true); }
+        );
+        unsubs.push(ub);
+        const fb = setTimeout(()=>setReady(true), 4000);
+        return () => { unsubs.forEach(u=>u&&u()); clearTimeout(fb); };
+      }, []);
+
+      // suppress remote apply while typing in a bound field
+      useEffect(() => {
+        const fin = (e) => { const k = e.target?.dataset?.synckey; if (k) editingKeys.current.add(k); };
+        const fout = (e) => { const k = e.target?.dataset?.synckey; if (k) { editingKeys.current.delete(k); if (pendingSnap.current[k] !== undefined) { applyNow(k, pendingSnap.current[k]); delete pendingSnap.current[k]; } } };
+        document.addEventListener('focusin', fin);
+        document.addEventListener('focusout', fout);
+        return () => { document.removeEventListener('focusin', fin); document.removeEventListener('focusout', fout); };
+      }, []);
+
+      const scheduleWrite = (timerKey, fn) => {
+        if (timers.current[timerKey]) clearTimeout(timers.current[timerKey]);
+        timers.current[timerKey] = setTimeout(async () => {
+          try { await fn(); setLastSync(Date.now()); } catch (e) { flashErr(); }
+        }, 400);
+      };
+
+      const setSection = useCallback((key, value) => {
+        const s = setterFor(key); if (s) s(value);                 // optimistic
+        scheduleWrite(key, () => sectionDoc(key).set({ v: value }));
+      }, []);
+
+      // boxes
+      const addBox = async () => {
+        const nextNum = boxes.reduce((m,b)=>Math.max(m, Number(b.number)||0), 0) + 1;
+        try { await boxesCol().add({ number: nextNum, name:'', items: [] }); } catch (e) { flashErr(); }
+      };
+      const updateBox = (box) => {
+        setBoxes(prev => prev.map(b=>b.id===box.id?box:b));         // optimistic
+        scheduleWrite('box:'+box.id, () => boxesCol().doc(box.id).set({ number: box.number, name: box.name, items: box.items }));
+      };
+      const delBox = async (id) => { try { await boxesCol().doc(id).delete(); } catch (e) { flashErr(); } };
+
+      const resetAll = async () => {
+        if (!confirm('לאפס את כל הנתונים ולחזור לברירת המחדל? פעולה זו בלתי הפיכה ומשפיעה על שניכם.')) return;
+        try {
+          for (const k of Object.keys(D)) await sectionDoc(k).set({ v: D[k] });
+          const snap = await boxesCol().get();
+          for (const d of snap.docs) await d.ref.delete();
+        } catch (e) { flashErr(); }
+        setDrawer(false);
+      };
+
+      const allTasks = [...addrShared, ...addrDor, ...addrBar, ...logistics, ...prep];
+      const time = lastSync ? new Date(lastSync).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}) : '—';
+
+      if (!ready) {
+        return (
+          <div className="h-full grid place-items-center text-slate-400">
+            <div className="flex flex-col items-center gap-3"><Icon.Refresh size={30} className="animate-spin text-blue-500"/><p className="text-sm">מתחבר לנתונים המשותפים…</p></div>
+          </div>
+        );
+      }
+
+      const Nav = () => (
+        <nav className="flex flex-col gap-1">
+          {TABS.map(t=>(
+            <button key={t.id} onClick={()=>{ setTab(t.id); setDrawer(false); }}
+              className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-[15px] font-semibold transition-colors ${tab===t.id?'bg-blue-600 text-white shadow-md shadow-blue-200/60':'text-slate-500 hover:bg-slate-100'}`}>
+              {t.icon} {t.label}
+            </button>
+          ))}
+        </nav>
+      );
+
+      return (
+        <div className="h-full flex bg-slate-50">
+          <aside className="hidden md:flex w-72 shrink-0 flex-col border-l border-slate-200 bg-white p-4">
+            <div className="mb-5 px-1">
+              <h1 className="font-extrabold text-xl text-slate-800">מעבר דירה 🏡</h1>
+              <p className="text-xs text-slate-400 mt-1">דור &amp; בר · כפר יונה</p>
+              <div className="mt-3 text-[11px] text-slate-400 bg-slate-50 rounded-lg p-2.5 leading-relaxed">
+                <div>מ־<b className="text-slate-500">הדרים 7/11</b></div><div>אל־<b className="text-slate-500">בנטל 2/10</b></div>
+              </div>
+            </div>
+            <Nav/>
+            <div className="mt-auto pt-4 space-y-2">
+              <SyncStatus time={time} connErr={connErr} seeding={false} />
+              <button onClick={resetAll} className="w-full flex items-center justify-center gap-2 text-xs text-slate-400 hover:text-rose-500 py-2 transition-colors"><Icon.Reset size={14}/> איפוס נתונים</button>
+            </div>
+          </aside>
+
+          {drawer && (
+            <div className="fixed inset-0 z-40 md:hidden" onClick={()=>setDrawer(false)}>
+              <div className="absolute inset-0 bg-slate-900/40" />
+              <aside onClick={e=>e.stopPropagation()} className="absolute top-0 right-0 h-full w-72 bg-white p-4 shadow-2xl flex flex-col" style={{animation:'slidein .2s ease-out'}}>
+                <div className="mb-5 flex items-start justify-between">
+                  <div><h1 className="font-extrabold text-xl text-slate-800">מעבר דירה 🏡</h1><p className="text-xs text-slate-400 mt-1">דור &amp; בר · כפר יונה</p></div>
+                  <button onClick={()=>setDrawer(false)} className="w-8 h-8 grid place-items-center rounded-full bg-slate-100 text-slate-500"><Icon.X size={18}/></button>
+                </div>
+                <Nav/>
+                <div className="mt-auto pt-4 space-y-2">
+                  <SyncStatus time={time} connErr={connErr} seeding={false} />
+                  <button onClick={resetAll} className="w-full flex items-center justify-center gap-2 text-xs text-slate-400 hover:text-rose-500 py-2"><Icon.Reset size={14}/> איפוס נתונים</button>
+                </div>
+              </aside>
+            </div>
+          )}
+
+          <div className="flex-1 flex flex-col min-w-0">
+            <header className="md:hidden sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+              <button onClick={()=>setDrawer(true)} className="w-9 h-9 grid place-items-center rounded-xl bg-slate-100 text-slate-600"><Icon.Menu size={20}/></button>
+              <h2 className="font-extrabold text-slate-800">{TABS.find(t=>t.id===tab)?.label}</h2>
+              <span className={`w-9 h-9 grid place-items-center rounded-xl ${connErr?'bg-rose-50 text-rose-500':'bg-emerald-50 text-emerald-600'}`}>
+                <Icon.Cloud size={18} className={pulse?'animate-pulse':''}/>
+              </span>
+            </header>
+            <header className="hidden md:flex sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200 px-6 py-4 items-center justify-between">
+              <h2 className="font-extrabold text-lg text-slate-800">{TABS.find(t=>t.id===tab)?.label}</h2>
+              <span className={`flex items-center gap-2 text-sm font-semibold rounded-xl px-3.5 py-2 ${connErr?'bg-rose-50 text-rose-600':'bg-emerald-50 text-emerald-600'}`}>
+                <span className={`w-2 h-2 rounded-full ${connErr?'bg-rose-500':'bg-emerald-500'} ${pulse?'animate-ping':''}`}></span>
+                {connErr ? 'אין חיבור' : 'מסונכרן בזמן אמת'}
+              </span>
+            </header>
+
+            <main className="flex-1 overflow-y-auto p-4 sm:p-6 max-w-3xl w-full mx-auto">
+              {tab==='dash' && <Dashboard allTasks={allTasks} boxes={boxes} movers={movers} purchases={purchases} />}
+              {tab==='addr' && <AddressView shared={addrShared} dor={addrDor} bar={addrBar} set={setSection} />}
+              {tab==='log'  && <LogisticsView logistics={logistics} prep={prep} set={setSection} />}
+              {tab==='box'  && <BoxesView boxes={boxes} addBox={addBox} updateBox={updateBox} delBox={delBox} />}
+              {tab==='buy'  && <PurchasesView items={purchases} set={setSection} />}
+              {tab==='mov'  && <MoversView movers={movers} set={setSection} />}
+              <div className="h-8" />
+            </main>
+          </div>
+
+          {saveErr && (
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-rose-600 text-white text-sm rounded-xl px-4 py-2.5 shadow-lg flex items-center gap-2 pop"><Icon.Alert size={16}/> לא נשמר — בדוק חיבור</div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>
