@@ -36,7 +36,7 @@
        ⚙️  הגדרות FIREBASE — הדבק כאן את הבלוק מהפרויקט שלך (ראה קובץ ההוראות)
        ===================================================================== */
     const firebaseConfig = {
-  apiKey: "AIzaSyC-IENp0i5ZS0NLYWSKLzkRU6pWxZFpL6M",
+      apiKey: "AIzaSyC-IENp0i5ZS0NLYWSKLzkRU6pWxZFpL6M",
   authDomain: "moving-dor-bar.firebaseapp.com",
   projectId: "moving-dor-bar",
   storageBucket: "moving-dor-bar.firebasestorage.app",
@@ -79,6 +79,7 @@
       User:(p)=><Svg {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Svg>,
       Cloud:(p)=><Svg {...p}><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></Svg>,
       Alert:(p)=><Svg {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></Svg>,
+      Note:(p)=><Svg {...p}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></Svg>,
     };
 
     /* ---------------- defaults ---------------- */
@@ -93,6 +94,7 @@
       prep: ['תיאום ניקיון','הדברה','קריאת מונים (דירה ישנה)','קריאת מונים (דירה חדשה)'].map(li),
       purchases: [ {id:uid(), text:'מקרר', cost:0, done:false}, {id:uid(), text:'ארון כביסה', cost:0, done:false} ],
       movers: { company:'', contact:'', cost:0, paid:0, date:'', notes:'' },
+      notes: ['לקחת מפתחות מבעל הבית הישן','להחזיר פיקדון על הדירה הישנה','לצלם מוני מים/חשמל/גז ביום המעבר','לעדכן כתובת בוויז/ניווט'].map(li),
     };
 
     /* ---------------- reusable bits ---------------- */
@@ -381,6 +383,7 @@
       { id:'box',  label:'ניהול ארגזים', icon:<Icon.Box size={20}/> },
       { id:'buy',  label:'רכישות', icon:<Icon.Cart size={20}/> },
       { id:'mov',  label:'מובילים', icon:<Icon.Truck size={20}/> },
+      { id:'note', label:'פתקים כלליים', icon:<Icon.Note size={20}/> },
     ];
 
     function App() {
@@ -401,9 +404,10 @@
       const [prep, setPrep] = useState(D.prep);
       const [purchases, setPurchases] = useState(D.purchases);
       const [movers, setMovers] = useState(D.movers);
+      const [notes, setNotes] = useState(D.notes);
       const [boxes, setBoxes] = useState([]);
 
-      const setterFor = (k)=>({ address_shared:setAddrShared, address_dor:setAddrDor, address_bar:setAddrBar, logistics:setLogistics, prep:setPrep, purchases:setPurchases, movers:setMovers }[k]);
+      const setterFor = (k)=>({ address_shared:setAddrShared, address_dor:setAddrDor, address_bar:setAddrBar, logistics:setLogistics, prep:setPrep, purchases:setPurchases, movers:setMovers, notes:setNotes }[k]);
       const timers = useRef({});
       const editingKeys = useRef(new Set());
       const pendingSnap = useRef({});
@@ -560,6 +564,7 @@
               {tab==='box'  && <BoxesView boxes={boxes} addBox={addBox} updateBox={updateBox} delBox={delBox} />}
               {tab==='buy'  && <PurchasesView items={purchases} set={setSection} />}
               {tab==='mov'  && <MoversView movers={movers} set={setSection} />}
+              {tab==='note' && <ListBlock title="פתקים כלליים" subtitle="דברים כלליים שלא נשכח" icon={<Icon.Note size={18}/>} accent="amber" items={notes} onChange={v=>setSection('notes', v)} />}
               <div className="h-8" />
             </main>
           </div>
