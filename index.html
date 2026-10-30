@@ -1,582 +1,850 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>מעבר דירה — דור ובר</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.4/babel.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    * { font-family: 'Assistant', system-ui, sans-serif; }
-    html, body, #root { height: 100%; }
-    body { margin: 0; background: #f8fafc; -webkit-tap-highlight-color: transparent; }
-    input, textarea { outline: none; }
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
-    @keyframes pop { 0% { transform: scale(.96); opacity: .4 } 100% { transform: scale(1); opacity: 1 } }
-    .pop { animation: pop .18s ease-out; }
-    @keyframes slidein { from { transform: translateX(-16px); opacity: 0 } to { transform: translateX(0); opacity: 1 } }
-    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EEF1F6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1118" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="מעבר דירה">
+<title>מעבר לבנטל</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Karantina:wght@700&family=Secular+One&display=swap">
+<style>
+/* Layout: mobile = sticky header + content + bottom tab bar; desktop = fixed side nav on the right. Boxes get a "tape label" number like marker on cardboard. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --sunk:#E4E8F0; --line:#D5DBE6;
+  --ink:#161B29; --ink-2:#555E73; --ink-3:#8A92A5;
+  --accent:#3451C6; --on-accent:#FFFFFF; --accent-soft:#E0E6FA;
+  --tape:#EDC25A; --on-tape:#33260A;
+  --danger:#C23A2B; --danger-soft:#F7DFDA; --warn:#B7791F;
+  --dor:#C05A12; --dor-soft:#FBE6D5; --bar:#A13770; --bar-soft:#F4DCE8;
+  --shadow:0 1px 2px rgb(20 28 50 / .06), 0 6px 18px rgb(20 28 50 / .06);
+  --f-display:"Secular One","Assistant",system-ui,sans-serif;
+  --f-body:"Assistant",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --f-marker:"Karantina","Secular One",Impact,sans-serif;
+  --r:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1118; --surface:#171B24; --sunk:#20252F; --line:#2B3140;
+  --ink:#E6EAF2; --ink-2:#A0A8B8; --ink-3:#6F7789;
+  --accent:#8EA2FF; --on-accent:#0B1230; --accent-soft:#222B4D;
+  --tape:#D9AA3B; --on-tape:#231700;
+  --danger:#F07966; --danger-soft:#3A1F1A; --warn:#E0A84A;
+  --dor:#F0A06A; --dor-soft:#3A2414; --bar:#E48CBB; --bar-soft:#3B1E2E;
+  --shadow:0 1px 2px rgb(0 0 0 / .35), 0 6px 18px rgb(0 0 0 / .25);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0E1118; --surface:#171B24; --sunk:#20252F; --line:#2B3140;
+  --ink:#E6EAF2; --ink-2:#A0A8B8; --ink-3:#6F7789;
+  --accent:#8EA2FF; --on-accent:#0B1230; --accent-soft:#222B4D;
+  --tape:#D9AA3B; --on-tape:#231700;
+  --danger:#F07966; --danger-soft:#3A1F1A; --warn:#E0A84A;
+  --dor:#F0A06A; --dor-soft:#3A2414; --bar:#E48CBB; --bar-soft:#3B1E2E;
+  --shadow:0 1px 2px rgb(0 0 0 / .35), 0 6px 18px rgb(0 0 0 / .25);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px)}
+html,body{margin:0}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;direction:rtl;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--bg)}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:inherit}
+button:disabled{cursor:default}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ic{display:block;flex:none}
+h1,h2,p{margin:0}
+.muted{color:var(--ink-2);font-size:14px}
+.num{font-variant-numeric:tabular-nums}
+
+/* shell */
+.side{display:none}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--bg);display:flex;align-items:center;gap:12px;
+  padding-block:12px 10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top-inner{display:flex;align-items:center;gap:12px;width:100%;max-width:760px;margin:0 auto}
+.brand{font-family:var(--f-display);font-size:22px;line-height:1.1;font-weight:400;text-wrap:balance}
+.brand-sub{color:var(--ink-2);font-size:13px}
+.sync{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);padding:4px 10px;border-radius:999px;white-space:nowrap}
+.sync i{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.sync.saving i{background:var(--warn)}
+.sync.off i{background:var(--ink-3)}
+.main{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:4px calc(100px + env(safe-area-inset-bottom,0px))}
+.stack{display:flex;flex-direction:column;gap:14px}
+
+.bottom{position:fixed;inset:auto 0 0 0;z-index:35;background:var(--surface);border-top:1px solid var(--line);
+  display:grid;grid-template-columns:repeat(5,1fr);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+body.typing .bottom{display:none}
+.nav-btn{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:58px;font-size:12px;font-weight:600;color:var(--ink-2)}
+.nav-btn.on{color:var(--accent)}
+.nav-btn.on .ic{transform:translateY(-1px)}
+.badge{position:absolute;top:6px;inset-inline-start:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--sunk);color:var(--ink-2);font-size:11px;line-height:18px;text-align:center;font-variant-numeric:tabular-nums}
+.nav-btn.on .badge{background:var(--accent-soft);color:var(--accent)}
+
+@media (min-width:900px){
+  .bottom{display:none!important}
+  .side{display:flex;flex-direction:column;gap:4px;position:fixed;top:0;bottom:0;inset-inline-start:0;width:220px;z-index:36;background:var(--surface);border-inline-end:1px solid var(--line);
+    padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));padding-inline:14px;padding-right:max(14px,env(safe-area-inset-right,0px))}
+  .side .nav-btn{flex-direction:row;justify-content:flex-start;gap:12px;min-height:44px;padding-inline:12px;border-radius:12px;font-size:15px}
+  .side .nav-btn.on{background:var(--accent-soft)}
+  .side .badge{position:static;margin-inline-start:auto}
+  .side-brand{font-family:var(--f-display);font-size:20px;padding:0 12px 16px}
+  .shell{margin-inline-start:220px}
+  .main{padding-block-end:40px}
+}
+
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.card-pad{padding:16px}
+.h2{font-family:var(--f-display);font-size:18px;font-weight:400;line-height:1.2}
+.sec-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:14px 16px 6px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--ink-2)}
+.note{border-radius:12px;padding:10px 14px;font-size:14px;background:var(--sunk);color:var(--ink-2)}
+.note.warn{background:var(--danger-soft);color:var(--danger)}
+.empty{color:var(--ink-3);font-size:14px;padding:6px 16px 10px}
+
+/* hero */
+.hero{padding:16px}
+.route{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px}
+.route .addr{display:flex;flex-direction:column;line-height:1.15;white-space:nowrap}
+.route .addr small{font-weight:600;font-size:11px;color:var(--ink-3);letter-spacing:.04em}
+.route-line{flex:1;display:flex;align-items:center;gap:6px;color:var(--ink-3);min-width:30px}
+.route-line::before,.route-line::after{content:"";flex:1;border-top:2px dashed var(--line)}
+.route-line .ic{transform:scaleX(-1);color:var(--accent)}
+.hero-row{display:flex;align-items:center;gap:16px;margin-top:16px}
+.ring{position:relative;width:92px;height:92px;flex:none}
+.ring svg{width:100%;height:100%}
+.ring .track{stroke:var(--sunk)}
+.ring .fill{stroke:var(--accent);transition:stroke-dashoffset .5s ease}
+.ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:1px;font-family:var(--f-display);font-size:26px;font-variant-numeric:tabular-nums}
+.ring-num small{font-size:14px}
+.countdown{font-family:var(--f-display);font-size:26px;line-height:1.15}
+.link{color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+
+/* areas */
+.areas{list-style:none;margin:0;padding:4px 8px 10px;display:grid;gap:2px}
+.area{display:block;width:100%;padding:10px 8px;border-radius:10px}
+.area:hover{background:var(--sunk)}
+.area-top{display:flex;justify-content:space-between;gap:8px;font-size:15px;font-weight:600;margin-bottom:6px}
+.area-top .num{color:var(--ink-2);font-weight:400;font-size:14px}
+.bar{display:block;height:8px;border-radius:4px;background:var(--sunk);overflow:hidden}
+.bar>span{display:block;height:100%;border-radius:4px;background:var(--accent);transition:width .4s ease}
+.bar.thin{height:3px;border-radius:0}
+.bar.thin>span{border-radius:0}
+
+/* money */
+.money{display:grid;grid-template-columns:repeat(3,1fr)}
+.money>div{padding:14px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.money>div+div{border-inline-start:1px solid var(--line)}
+.money .val{font-family:var(--f-display);font-size:20px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.money .val.due{color:var(--danger)}
+
+/* filters */
+.seg{display:inline-flex;background:var(--sunk);border-radius:999px;padding:3px;gap:2px}
+.seg button{font-size:13px;font-weight:600;padding:4px 12px;border-radius:999px;color:var(--ink-2)}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+
+/* lists */
+.list .card-head{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;background:var(--accent)}
+.tone-dor .dot,.tone-dor .bar>span{background:var(--dor)}
+.tone-bar .dot,.tone-bar .bar>span{background:var(--bar)}
+.head-text{display:flex;flex-direction:column;min-width:0;flex:1}
+.head-text .muted{font-size:13px}
+.count{font-size:13px;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.chev{color:var(--ink-3);transition:transform .2s}
+.chev.up{transform:rotate(180deg)}
+.rows{list-style:none;margin:0;padding:0}
+.row{display:flex;align-items:center;gap:8px;padding:3px 12px 3px 10px;min-height:50px;border-top:1px solid var(--line)}
+.chk{width:26px;height:26px;border-radius:50%;border:2px solid var(--ink-3);display:grid;place-items:center;color:transparent;flex:none;margin-inline:4px 0}
+.chk[aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.row-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.row.done .fld{text-decoration:line-through;color:var(--ink-3)}
+.tag{font-size:11px;font-weight:700;color:var(--ink-3);padding-inline-start:9px;margin-bottom:-6px}
+.who{flex:none;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--sunk);color:var(--ink-3)}
+.who-dor{background:var(--dor-soft);color:var(--dor)}
+.who-bar{background:var(--bar-soft);color:var(--bar)}
+.who-both{background:var(--accent-soft);color:var(--accent)}
+.done-toggle{display:block;width:100%;padding:10px 16px;font-size:14px;font-weight:600;color:var(--ink-2);border-top:1px solid var(--line)}
+.del{width:30px;height:30px;border-radius:50%;background:var(--sunk);color:var(--ink-2);display:grid;place-items:center;flex:none;transition:background .15s,color .15s}
+.del:hover,.del:focus-visible{background:var(--danger);color:var(--on-accent)}
+.del.sm{width:22px;height:22px}
+
+/* fields: 16px everywhere so iOS never zooms on focus */
+.fld{font:inherit;font-size:16px;color:var(--ink);background:transparent;border:1.5px solid transparent;border-radius:10px;padding:8px 9px;width:100%;min-width:0;appearance:none;-webkit-appearance:none}
+.fld::placeholder{color:var(--ink-3)}
+.fld:hover:not(:disabled){border-color:var(--line)}
+.fld:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+.fld:disabled{opacity:1;-webkit-text-fill-color:currentColor}
+.fld.boxed{background:var(--sunk)}
+.fld.boxed:focus{background:var(--surface)}
+textarea.fld{resize:vertical;min-height:84px;line-height:1.5}
+.ltr{direction:ltr;text-align:right}
+.qa{display:flex;gap:8px;padding:10px 12px 12px;border-top:1px solid var(--line)}
+.qa .fld{background:var(--sunk)}
+.qa .fld:focus{background:var(--surface)}
+.qa-btn{flex:none;width:42px;border-radius:10px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
+.qa-btn:disabled{background:var(--sunk);color:var(--ink-3)}
+.lbl{display:block;font-size:13px;font-weight:600;color:var(--ink-2);margin-bottom:4px}
+
+/* boxes */
+.toolbar{display:flex;gap:10px}
+.search{flex:1;min-width:0;display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding-inline:12px 4px;color:var(--ink-3)}
+.search .fld{border:0;padding-inline:4px}
+.search .fld:focus{background:transparent}
+.btn{flex:none;display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:var(--on-accent);font-weight:700;padding:0 16px;border-radius:12px;min-height:46px}
+.btn-ghost{font-size:14px;font-weight:600;color:var(--ink-2);padding:6px 10px;border-radius:8px}
+.btn-ghost.danger:hover{background:var(--danger-soft);color:var(--danger)}
+.stats{font-size:14px;color:var(--ink-2);padding-inline:4px;font-variant-numeric:tabular-nums}
+.boxes{display:grid;gap:10px}
+.box-head{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;width:100%}
+.box-num{font-family:var(--f-marker);font-size:32px;line-height:1;min-width:48px;height:48px;padding-inline:6px;display:grid;place-items:center;background:var(--tape);color:var(--on-tape);border-radius:4px;transform:rotate(-2.5deg);flex:none;font-variant-numeric:tabular-nums;padding-top:3px}
+.box-title{flex:1;min-width:0;display:flex;flex-direction:column}
+.box-title strong{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.box-title strong.unnamed{color:var(--ink-3);font-weight:600}
+.pill{flex:none;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--sunk);color:var(--ink-2)}
+.st-closed{background:var(--accent-soft);color:var(--accent)}
+.st-unpacked{background:var(--dor-soft);color:var(--dor)}
+.fragile{color:var(--danger);font-weight:700}
+.box-body{border-top:1px solid var(--line);padding:12px 14px 4px;display:flex;flex-direction:column;gap:10px}
+.box-body .qa{border-top:0;padding:0}
+.chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--sunk);border-radius:999px;padding:4px 4px 4px 4px;padding-inline-start:12px;font-size:15px;max-width:100%}
+.chip span{overflow-wrap:anywhere}
+.chip.hit{background:var(--tape);color:var(--on-tape)}
+.box-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:8px}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:600;cursor:pointer}
+.toggle input{width:20px;height:20px;accent-color:var(--danger)}
+
+/* budget */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:4px 16px 16px}
+.form-grid .full{grid-column:1/-1}
+.form-grid .fld{background:var(--sunk)}
+.form-grid .fld:focus{background:var(--surface)}
+.with-btn{display:flex;gap:6px}
+.icon-btn{text-decoration:none;flex:none;width:42px;border-radius:10px;background:var(--sunk);color:var(--ink-2);display:grid;place-items:center}
+.balance{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 16px 16px;padding:12px 14px;border-radius:12px;background:var(--sunk);font-weight:600}
+.balance .val{font-family:var(--f-display);font-size:20px;font-variant-numeric:tabular-nums}
+.buy-form{display:flex;gap:8px;padding:4px 12px 12px}
+.buy-form .fld{background:var(--sunk)}
+.buy-form .fld:focus{background:var(--surface)}
+.cost-wrap{flex:none;width:104px;display:flex;align-items:center;position:relative}
+.cost-wrap .cur{position:absolute;inset-inline-end:9px;color:var(--ink-3);font-size:14px;pointer-events:none}
+.cost-wrap .fld{padding-inline-end:24px;font-variant-numeric:tabular-nums}
+
+/* meters */
+.meters{padding:0 12px 14px;display:grid;gap:6px}
+.mrow{display:grid;grid-template-columns:56px 1fr 1fr;gap:8px;align-items:center}
+.mhead{font-size:12px;font-weight:700;color:var(--ink-2)}
+.mlabel{font-weight:600;font-size:15px}
+.meters .fld{background:var(--sunk);font-variant-numeric:tabular-nums}
+.meters .fld:focus{background:var(--surface)}
+
+/* toast */
+.toast{position:fixed;z-index:50;inset-inline:max(16px,env(safe-area-inset-left,0px));bottom:calc(74px + env(safe-area-inset-bottom,0px));margin:0 auto;max-width:420px;
+  display:flex;align-items:center;gap:12px;background:var(--ink);color:var(--bg);border-radius:12px;padding:12px 14px;font-size:15px;box-shadow:var(--shadow)}
+.toast.err{background:var(--danger);color:var(--on-accent)}
+.toast span{flex:1}
+.toast-btn{font-weight:700;text-decoration:underline;text-underline-offset:3px}
+body.typing .toast{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+@media (min-width:900px){.toast{bottom:24px;inset-inline-start:244px}}
+
+.skel{background:var(--sunk);border-color:transparent;box-shadow:none;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.55}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:380px){.money .val{font-size:17px}.countdown{font-size:22px}}
+</style>
 </head>
 <body>
-  <div id="root"></div>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const { useState, useEffect, useRef, useMemo, createContext, useContext } = React;
+const html = htm.bind(React.createElement);
+const RO = createContext(false);
 
-  <script type="text/babel" data-presets="react">
-    const { useState, useEffect, useRef, useCallback } = React;
-
-    /* =====================================================================
-       ⚙️  הגדרות FIREBASE — הדבק כאן את הבלוק מהפרויקט שלך (ראה קובץ ההוראות)
-       ===================================================================== */
-    const firebaseConfig = {
-      apiKey: "AIzaSyC-IENp0i5ZS0NLYWSKLzkRU6pWxZFpL6M",
+/* =====================================================================
+   הגדרות FIREBASE
+   ===================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyC-IENp0i5ZS0NLYWSKLzkRU6pWxZFpL6M",
   authDomain: "moving-dor-bar.firebaseapp.com",
   projectId: "moving-dor-bar",
   storageBucket: "moving-dor-bar.firebasestorage.app",
   messagingSenderId: "583525705273",
   appId: "1:583525705273:web:fdae3b0c443ae859cd0fe8",
   measurementId: "G-HWPTF08VXP"
-    };
-    /* ===================================================================== */
+};
+let db = null;
+try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); } catch (e) { console.error(e); }
+const sectionDoc = k => db.collection('moving').doc(k);
+const boxesCol = () => db.collection('moving_boxes');
 
-    let db = null, initError = null;
-    const notPlaceholder = (s) => s && !String(s).startsWith("PASTE_");
-    const isConfigured = notPlaceholder(firebaseConfig.apiKey) && notPlaceholder(firebaseConfig.projectId);
-    try { if (isConfigured) { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); } }
-    catch (e) { initError = e.message; }
+/* ---------- icons ---------- */
+const ICONS = {
+  home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  pin: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  list: '<rect x="8" y="2.5" width="8" height="4" rx="1"/><path d="M16 4.5h2a2 2 0 0 1 2 2V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2h2"/><path d="M9 12h6M9 16h4"/>',
+  box: '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/>',
+  wallet: '<path d="M20 7V5.5A1.5 1.5 0 0 0 18.5 4H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v3"/><path d="M3 6v12a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-3"/><path d="M21 12h-4a2 2 0 0 0 0 4h4z"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  check: '<path d="m5 12.5 4.5 4.5L19 7"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/>',
+  chev: '<path d="m6 9 6 6 6-6"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+  truck: '<path d="M2 6.5h12v9H2zM14 9.5h4l3 3v3h-7"/><circle cx="6" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
+};
+function Icon({ n, s = 20 }) {
+  return html`<svg className="ic" width=${s} height=${s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" dangerouslySetInnerHTML=${{ __html: ICONS[n] }}></svg>`;
+}
 
-    const sectionDoc = (k) => db.collection('moving').doc(k);
-    const boxesCol   = () => db.collection('moving_boxes');
+/* ---------- helpers ---------- */
+const num = v => { const n = parseFloat(String(v ?? '').replace(/,/g, '').replace(/[^\d.\-]/g, '')); return isFinite(n) ? n : 0; };
+const ILS = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 });
+const money = v => ILS.format(num(v));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+const sumBy = (arr, f) => arr.reduce((s, x) => s + f(x), 0);
+const clone = x => JSON.parse(JSON.stringify(x ?? null));
+function lsGet(k, d) { try { const v = localStorage.getItem('mv:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem('mv:' + k, JSON.stringify(v)); } catch (e) {} }
+function usePersist(k, d) { const [v, setV] = useState(() => lsGet(k, d)); return [v, x => { setV(x); lsSet(k, x); }]; }
 
-    /* ---------------- icons ---------------- */
-    const Svg = (p) => (
-      <svg xmlns="http://www.w3.org/2000/svg" width={p.size||20} height={p.size||20}
-        viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={p.sw||2}
-        strokeLinecap="round" strokeLinejoin="round" className={p.className}>{p.children}</svg>
-    );
-    const Icon = {
-      X:(p)=><Svg {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></Svg>,
-      Plus:(p)=><Svg {...p}><path d="M5 12h14"/><path d="M12 5v14"/></Svg>,
-      Check:(p)=><Svg {...p}><path d="M20 6 9 17l-5-5"/></Svg>,
-      Menu:(p)=><Svg {...p}><path d="M4 12h16"/><path d="M4 6h16"/><path d="M4 18h16"/></Svg>,
-      Refresh:(p)=><Svg {...p}><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></Svg>,
-      Home:(p)=><Svg {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></Svg>,
-      Box:(p)=><Svg {...p}><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></Svg>,
-      Cart:(p)=><Svg {...p}><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></Svg>,
-      Truck:(p)=><Svg {...p}><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></Svg>,
-      Pin:(p)=><Svg {...p}><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></Svg>,
-      List:(p)=><Svg {...p}><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></Svg>,
-      Wallet:(p)=><Svg {...p}><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></Svg>,
-      Search:(p)=><Svg {...p}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></Svg>,
-      Reset:(p)=><Svg {...p}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></Svg>,
-      User:(p)=><Svg {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Svg>,
-      Cloud:(p)=><Svg {...p}><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></Svg>,
-      Alert:(p)=><Svg {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></Svg>,
-      Note:(p)=><Svg {...p}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></Svg>,
-    };
+function daysUntil(s) {
+  if (!s) return null; const d = new Date(s); if (isNaN(d)) return null;
+  const t = new Date(); t.setHours(0, 0, 0, 0); const dd = new Date(d); dd.setHours(0, 0, 0, 0);
+  return Math.round((dd - t) / 86400000);
+}
+function countdownText(n) {
+  if (n == null) return 'מתי עוברים?';
+  if (n > 1) return `עוד ${n} ימים להובלה`;
+  if (n === 1) return 'ההובלה מחר';
+  if (n === 0) return 'ההובלה היום';
+  return 'ההובלה מאחורינו';
+}
+function dateText(s) {
+  if (!s) return ''; const d = new Date(s); if (isNaN(d)) return '';
+  const day = new Intl.DateTimeFormat('he-IL', { weekday: 'long', day: 'numeric', month: 'long' }).format(d);
+  return String(s).includes('T') ? `${day}, ${new Intl.DateTimeFormat('he-IL', { hour: '2-digit', minute: '2-digit' }).format(d)}` : day;
+}
 
-    /* ---------------- defaults ---------------- */
-    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
-    const li = (text) => ({ id: uid(), text, done: false });
-    const K = { addr_shared:'address_shared', addr_dor:'address_dor', addr_bar:'address_bar', logistics:'logistics', prep:'prep', purchases:'purchases', movers:'movers' };
-    const D = {
-      address_shared: ['בנק לאומי','ביטוח דירה','משרד הפנים','מים (תאגיד המים)','חשמל','גז','ארנונה','דואר ישראל'].map(li),
-      address_dor: ['מקום העבודה של דור','מנורה (פנסיה, השתלמות, גמל)','מור (השתלמות, גמל)','ילין לפידות (השתלמות)','הפניקס (השתלמות, גמל)','אקסלנס טרייד (תיק השקעות)'].map(li),
-      address_bar: ['מקום העבודה של בר','מיטב (פנסיה)','ילין לפידות (השתלמות)','מור (גמל)'].map(li),
-      logistics: ['הזמנת ארגזים','מיון פריטים','הכנת "תיק הישרדות"'].map(li),
-      prep: ['תיאום ניקיון','הדברה','קריאת מונים (דירה ישנה)','קריאת מונים (דירה חדשה)'].map(li),
-      purchases: [ {id:uid(), text:'מקרר', cost:0, done:false}, {id:uid(), text:'ארון כביסה', cost:0, done:false} ],
-      movers: { company:'', contact:'', cost:0, paid:0, date:'', notes:'' },
-      notes: ['לקחת מפתחות מבעל הבית הישן','להחזיר פיקדון על הדירה הישנה','לצלם מוני מים/חשמל/גז ביום המעבר','לעדכן כתובת בוויז/ניווט'].map(li),
-    };
+/* ---------- defaults (used only if a section doesn't exist yet in Firestore) ---------- */
+const li = text => ({ id: uid(), text, done: false });
+const D = {
+  address_shared: ['בנק לאומי', 'ביטוח דירה', 'משרד הפנים', 'מים (תאגיד המים)', 'חשמל', 'גז', 'ארנונה', 'דואר ישראל'].map(li),
+  address_dor: ['מקום העבודה של דור', 'מנורה (פנסיה, השתלמות, גמל)', 'מור (השתלמות, גמל)', 'ילין לפידות (השתלמות)', 'הפניקס (השתלמות, גמל)', 'אקסלנס טרייד (תיק השקעות)'].map(li),
+  address_bar: ['מקום העבודה של בר', 'מיטב (פנסיה)', 'ילין לפידות (השתלמות)', 'מור (גמל)'].map(li),
+  logistics: ['הזמנת ארגזים', 'מיון פריטים', 'הכנת "תיק הישרדות"'].map(li),
+  prep: ['תיאום ניקיון', 'הדברה', 'קריאת מונים (דירה ישנה)', 'קריאת מונים (דירה חדשה)'].map(li),
+  notes: ['לקחת מפתחות מבעל הבית הישן', 'להחזיר פיקדון על הדירה הישנה', 'לעדכן כתובת בוויז/ניווט'].map(li),
+  purchases: [{ id: uid(), text: 'מקרר', cost: 0, done: false }, { id: uid(), text: 'ארון כביסה', cost: 0, done: false }],
+  movers: { company: '', contact: '', phone: '', cost: 0, paid: 0, date: '', notes: '' },
+  meters: { old: {}, new: {} },
+};
+const SECTION_KEYS = Object.keys(D);
 
-    /* ---------------- reusable bits ---------------- */
-    function DeleteBtn({ onClick, title='מחיקה' }) {
-      return (
-        <button title={title} onClick={(e)=>{ e.stopPropagation(); onClick(); }}
-          className="shrink-0 w-7 h-7 grid place-items-center rounded-full bg-slate-100 text-slate-400 hover:bg-rose-500 hover:text-white transition-colors">
-          <Icon.X size={15} sw={2.4} />
-        </button>
-      );
-    }
-    function AddRow({ placeholder, onAdd, accent='blue' }) {
-      const [v, setV] = useState('');
-      const submit = () => { const t=v.trim(); if(!t) return; onAdd(t); setV(''); };
-      const ring = { blue:'focus:ring-blue-400', purple:'focus:ring-purple-400', amber:'focus:ring-amber-400', emerald:'focus:ring-emerald-400', rose:'focus:ring-rose-400' }[accent];
-      const btn = { blue:'bg-blue-600 hover:bg-blue-700', purple:'bg-purple-600 hover:bg-purple-700', amber:'bg-amber-500 hover:bg-amber-600', emerald:'bg-emerald-600 hover:bg-emerald-700', rose:'bg-rose-600 hover:bg-rose-700' }[accent];
-      return (
-        <div className="flex gap-2">
-          <input value={v} onChange={e=>setV(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()} placeholder={placeholder}
-            className={`flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 ${ring} focus:border-transparent transition`} />
-          <button onClick={submit} className={`shrink-0 ${btn} text-white rounded-xl px-3.5 grid place-items-center transition-colors`}><Icon.Plus size={18}/></button>
+const LISTS = {
+  address_shared: { title: 'משותף', sub: 'בנק, ביטוח, רשויות ותשתיות', tone: 'shared', short: 'כתובת · משותף' },
+  address_dor: { title: 'הכספים של דור', sub: 'עבודה, פנסיה, השתלמות וגמל', tone: 'dor', short: 'כתובת · דור' },
+  address_bar: { title: 'הכספים של בר', sub: 'עבודה, פנסיה, השתלמות וגמל', tone: 'bar', short: 'כתובת · בר' },
+  logistics: { title: 'לוגיסטיקה', sub: 'ארגזים, מיון ותיק הישרדות', tone: 'shared', short: 'לוגיסטיקה' },
+  prep: { title: 'הכנת הדירה', sub: 'ניקיון, הדברה ומונים', tone: 'shared', short: 'הכנת הדירה' },
+  notes: { title: 'לא לשכוח', sub: 'מפתחות, פיקדון ושאר הקטנות', tone: 'shared', short: 'לא לשכוח' },
+};
+const TASK_KEYS = ['logistics', 'prep', 'notes', 'address_shared', 'address_dor', 'address_bar'];
+const WHO_NEXT = { '': 'dor', dor: 'bar', bar: 'both', both: '' };
+const WHO_LABEL = { '': 'מי?', dor: 'דור', bar: 'בר', both: 'שנינו' };
+const STATUS = { open: 'בהכנה', closed: 'סגור', unpacked: 'נפרק' };
+const STATUS_NEXT = { open: 'closed', closed: 'unpacked', unpacked: 'open' };
+const TABS = [
+  { id: 'home', label: 'סקירה', icon: 'home' },
+  { id: 'address', label: 'כתובות', icon: 'pin' },
+  { id: 'prep', label: 'הכנות', icon: 'list' },
+  { id: 'boxes', label: 'ארגזים', icon: 'box' },
+  { id: 'budget', label: 'תקציב', icon: 'wallet' },
+];
+const validTab = t => (TABS.some(x => x.id === t) ? t : null);
+
+/* ---------- data layer ----------
+   Lists are stored as moving/<key> = { v: [...] } (same shape as before, so existing data carries over).
+   List changes run in a transaction: each change is re-applied on the latest server copy,
+   so Dor and Bar editing the same list at the same time never overwrite each other. */
+const api = {
+  get: () => undefined, local: () => {},
+  hooks: { pending: () => {}, error: () => {}, undo: () => {} },
+  track(p) {
+    this.hooks.pending(1);
+    return p.catch(e => {
+      console.error(e);
+      this.hooks.error(e && e.code === 'permission-denied' ? 'אין הרשאה לשמור. בדקו את חוקי האבטחה ב־Firebase' : 'לא נשמר. בדקו את החיבור ונסו שוב');
+    }).finally(() => this.hooks.pending(-1));
+  },
+  mutate(key, fn) {
+    this.local(key, fn);
+    const ref = sectionDoc(key);
+    return this.track(db.runTransaction(async tx => {
+      const s = await tx.get(ref);
+      const cur = s.exists && s.data().v !== undefined ? s.data().v : clone(D[key]);
+      tx.set(ref, { v: fn(clone(cur)) });
+    }));
+  },
+  addItem(key, item) { return this.mutate(key, a => [...(a || []), item]); },
+  patchItem(key, id, patch) { return this.mutate(key, a => (a || []).map(x => (x.id === id ? { ...x, ...patch } : x))); },
+  removeItem(key, id, label) {
+    const arr = this.get(key) || []; const idx = arr.findIndex(x => x.id === id); const removed = arr[idx];
+    this.mutate(key, a => (a || []).filter(x => x.id !== id));
+    if (removed) this.hooks.undo(label || 'נמחק', () => this.mutate(key, a => {
+      const b = [...(a || [])]; if (b.some(x => x.id === removed.id)) return b;
+      b.splice(Math.min(idx, b.length), 0, removed); return b;
+    }));
+  },
+  setMap(key, patch) { return this.track(sectionDoc(key).set({ v: patch }, { merge: true })); },
+  box(id) { return boxesCol().doc(id); },
+  boxAdd(data) { const ref = boxesCol().doc(); this.track(ref.set(data)); return ref.id; },
+  boxUpdate(id, patch) { return this.track(this.box(id).update(patch)); },
+  boxAddItem(id, item) { return this.track(this.box(id).update({ items: firebase.firestore.FieldValue.arrayUnion(item) })); },
+  boxRemoveItem(id, item) { return this.track(this.box(id).update({ items: firebase.firestore.FieldValue.arrayRemove(item) })); },
+  boxRemove(b, label) {
+    const body = { ...b }; delete body.id;
+    this.track(this.box(b.id).delete());
+    this.hooks.undo(label || 'נמחק', () => this.track(this.box(b.id).set(body)));
+  },
+};
+
+/* ---------- small components ---------- */
+function Field({ value, onCommit, placeholder, multiline, type = 'text', inputMode, dir = 'auto', className = '', id, debounce, commitOnChange, label, required }) {
+  const ro = useContext(RO);
+  const v0 = value == null ? '' : String(value);
+  const [draft, setDraft] = useState(v0);
+  const focused = useRef(false), skip = useRef(false), timer = useRef(null), sent = useRef(v0);
+  useEffect(() => { if (!focused.current) { setDraft(v0); sent.current = v0; } }, [v0]);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const commit = v => {
+    clearTimeout(timer.current);
+    if (required && !v.trim()) { setDraft(v0); sent.current = v0; return; }
+    if (v !== sent.current) { sent.current = v; onCommit(v); }
+  };
+  const p = {
+    id, value: draft, placeholder, dir, inputMode, disabled: ro, 'aria-label': label, className: 'fld ' + className,
+    onFocus: () => { focused.current = true; },
+    onBlur: () => { focused.current = false; if (skip.current) { skip.current = false; return; } commit(draft); },
+    onChange: e => {
+      const v = e.target.value; setDraft(v);
+      if (commitOnChange) commit(v);
+      else if (debounce) { clearTimeout(timer.current); timer.current = setTimeout(() => commit(v), debounce); }
+    },
+  };
+  if (multiline) return html`<textarea ...${p} rows="3"></textarea>`;
+  return html`<input ...${p} type=${type} enterKeyHint="done" autoComplete="off"
+    onKeyDown=${e => {
+      if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); }
+      else if (e.key === 'Escape') { skip.current = true; setDraft(sent.current); e.currentTarget.blur(); }
+    }} />`;
+}
+
+function QuickAdd({ placeholder, onAdd, label }) {
+  const ro = useContext(RO);
+  const [v, setV] = useState(''); const ref = useRef(null);
+  if (ro) return null;
+  const submit = e => { e.preventDefault(); const t = v.trim(); if (!t) return; onAdd(t); setV(''); ref.current && ref.current.focus(); };
+  return html`<form className="qa" onSubmit=${submit}>
+    <input ref=${ref} className="fld" dir="auto" value=${v} onChange=${e => setV(e.target.value)} placeholder=${placeholder} aria-label=${label || placeholder} enterKeyHint="enter" autoComplete="off" />
+    <button className="qa-btn" type="submit" aria-label="הוסף" disabled=${!v.trim()}><${Icon} n="plus" s=${20} /></button>
+  </form>`;
+}
+
+function Del({ onClick, label = 'מחק', small }) {
+  const ro = useContext(RO);
+  if (ro) return null;
+  return html`<button type="button" className=${'del' + (small ? ' sm' : '')} aria-label=${label}
+    onClick=${e => { e.stopPropagation(); onClick(); }}><${Icon} n="x" s=${small ? 12 : 14} /></button>`;
+}
+
+function Ring({ value }) {
+  const r = 34, c = 2 * Math.PI * r;
+  return html`<div className="ring" role="img" aria-label=${`${value} אחוז הושלמו`}>
+    <svg viewBox="0 0 80 80">
+      <circle className="track" cx="40" cy="40" r=${r} fill="none" strokeWidth="8" />
+      <circle className="fill" cx="40" cy="40" r=${r} fill="none" strokeWidth="8" strokeLinecap="round"
+        strokeDasharray=${c} strokeDashoffset=${c * (1 - value / 100)} transform="rotate(-90 40 40)" />
+    </svg>
+    <span className="ring-num">${value}<small>%</small></span>
+  </div>`;
+}
+
+/* ---------- tasks ---------- */
+function TaskRow({ t, k, showWho = true, tag }) {
+  const ro = useContext(RO);
+  return html`<li className=${'row' + (t.done ? ' done' : '')}>
+    <button className="chk" role="checkbox" aria-checked=${!!t.done} aria-label="סמן כבוצע" disabled=${ro}
+      onClick=${() => api.patchItem(k, t.id, { done: !t.done })}><${Icon} n="check" s=${15} /></button>
+    <div className="row-main">
+      ${tag && html`<span className="tag">${tag}</span>`}
+      <${Field} value=${t.text} label="שם המשימה" required onCommit=${v => api.patchItem(k, t.id, { text: v.trim() })} />
+    </div>
+    ${showWho && html`<button className=${'who who-' + (t.who || 'none')} disabled=${ro} aria-label="מי אחראי"
+      onClick=${() => api.patchItem(k, t.id, { who: WHO_NEXT[t.who || ''] })}>${WHO_LABEL[t.who || '']}</button>`}
+    <${Del} label="מחק משימה" onClick=${() => api.removeItem(k, t.id, 'המשימה נמחקה')} />
+  </li>`;
+}
+
+function TaskList({ k, items }) {
+  const meta = LISTS[k];
+  const all = items || [];
+  const open = all.filter(t => !t.done);
+  const done = all.filter(t => t.done);
+  const [collapsed, setCollapsed] = usePersist('col:' + k, false);
+  const [showDone, setShowDone] = usePersist('done:' + k, false);
+  const showWho = !(k === 'address_dor' || k === 'address_bar');
+  return html`<section className=${'card list tone-' + meta.tone}>
+    <button className="card-head" aria-expanded=${!collapsed} onClick=${() => setCollapsed(!collapsed)}>
+      <span className="dot"></span>
+      <span className="head-text"><span className="h2">${meta.title}</span><span className="muted">${meta.sub}</span></span>
+      <span className="count">${done.length} מתוך ${all.length}</span>
+      <span className=${'chev' + (collapsed ? '' : ' up')}><${Icon} n="chev" s=${18} /></span>
+    </button>
+    <span className="bar thin"><span style=${{ width: pct(done.length, all.length) + '%' }}></span></span>
+    ${!collapsed && html`<div>
+      ${all.length === 0 && html`<p className="empty" style=${{ paddingTop: 12 }}>אין עדיין משימות כאן. הוסיפו את הראשונה למטה.</p>`}
+      ${all.length > 0 && open.length === 0 && html`<p className="empty" style=${{ paddingTop: 12 }}>הכל בוצע ברשימה הזו.</p>`}
+      <ul className="rows">${open.map(t => html`<${TaskRow} key=${t.id} t=${t} k=${k} showWho=${showWho} />`)}</ul>
+      ${done.length > 0 && html`<button className="done-toggle" onClick=${() => setShowDone(!showDone)}>${showDone ? 'הסתר' : 'הצג'} ${done.length} שבוצעו</button>`}
+      ${showDone && done.length > 0 && html`<ul className="rows">${done.map(t => html`<${TaskRow} key=${t.id} t=${t} k=${k} showWho=${showWho} />`)}</ul>`}
+      <${QuickAdd} placeholder="משימה חדשה…" label=${'הוספת משימה ל' + meta.title}
+        onAdd=${text => api.addItem(k, { id: uid(), text, done: false, who: '' })} />
+    </div>`}
+  </section>`;
+}
+
+/* ---------- home ---------- */
+function computeAreas(S, boxes) {
+  const t = ks => { const it = ks.flatMap(k => S[k] || []); return [it.filter(x => x.done).length, it.length]; };
+  const m = S.movers || {};
+  const purchases = S.purchases || [];
+  const steps = [!!String(m.company || '').trim(), !!m.date, num(m.cost) > 0, num(m.cost) > 0 && num(m.paid) >= num(m.cost)];
+  return [
+    { key: 'addr', label: 'שינוי כתובת', tab: 'address', v: t(['address_shared', 'address_dor', 'address_bar']) },
+    { key: 'prep', label: 'הכנות ולוגיסטיקה', tab: 'prep', v: t(['logistics', 'prep', 'notes']) },
+    { key: 'boxes', label: 'ארגזים סגורים', tab: 'boxes', v: [boxes.filter(b => b.status === 'closed' || b.status === 'unpacked').length, boxes.length] },
+    { key: 'buy', label: 'קניות לבית', tab: 'budget', v: [purchases.filter(p => p.done).length, purchases.length] },
+    { key: 'movers', label: 'הובלה (חברה, תאריך, מחיר, תשלום)', tab: 'budget', v: [steps.filter(Boolean).length, 4] },
+  ];
+}
+
+function Home({ S, boxes, go }) {
+  const movers = S.movers || {};
+  const purchases = S.purchases || [];
+  const areas = computeAreas(S, boxes);
+  const active = areas.filter(a => a.v[1] > 0);
+  const overall = active.length ? Math.round((active.reduce((s, a) => s + a.v[0] / a.v[1], 0) / active.length) * 100) : 0;
+  const days = daysUntil(movers.date);
+  const [who, setWho] = usePersist('who', 'all');
+  const mine = (t, k) => who === 'all' || t.who === who || t.who === 'both' || k === 'address_' + who;
+  const next = TASK_KEYS.flatMap(k => (S[k] || []).filter(t => !t.done && mine(t, k)).map(t => ({ t, k }))).slice(0, 6);
+  const buyTotal = sumBy(purchases, p => num(p.cost)), buyPaid = sumBy(purchases.filter(p => p.done), p => num(p.cost));
+  const total = buyTotal + num(movers.cost), paid = buyPaid + num(movers.paid);
+
+  return html`<div className="stack">
+    <section className="card hero">
+      <div className="route">
+        <span className="addr"><small>יוצאים מ</small>הדרים 7/11</span>
+        <span className="route-line"><${Icon} n="truck" s=${20} /></span>
+        <span className="addr"><small>נכנסים ל</small>בנטל 2, דירה 10</span>
+      </div>
+      <div className="hero-row">
+        <${Ring} value=${overall} />
+        <div>
+          <div className="eyebrow">ההתקדמות הכוללת</div>
+          <div className="countdown">${countdownText(days)}</div>
+          <div className="muted">${dateText(movers.date) || html`<button className="link" onClick=${() => go('budget')}>קבעו תאריך הובלה</button>`}</div>
         </div>
-      );
-    }
-    function ChecklistItem({ item, onToggle, onDelete, accent='blue' }) {
-      const ring = { blue:'bg-blue-600 border-blue-600', purple:'bg-purple-600 border-purple-600', amber:'bg-amber-500 border-amber-500', emerald:'bg-emerald-600 border-emerald-600', rose:'bg-rose-600 border-rose-600' }[accent];
-      return (
-        <div onClick={onToggle} className="pop group flex items-center gap-3 bg-white border border-slate-100 rounded-xl px-3.5 py-3 shadow-sm hover:shadow cursor-pointer select-none transition">
-          <span className={`shrink-0 w-5 h-5 rounded-md border-2 grid place-items-center transition-colors ${item.done ? ring : 'border-slate-300 bg-white'}`}>
-            {item.done && <Icon.Check size={13} className="text-white" sw={3} />}
-          </span>
-          <span className={`flex-1 text-[15px] leading-tight transition-colors ${item.done ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{item.text}</span>
-          <DeleteBtn onClick={onDelete} />
+      </div>
+    </section>
+
+    <section className="card">
+      <div className="sec-title"><h2 className="h2">איפה אנחנו עומדים</h2><span className="muted">כל תחום שווה חלק שווה</span></div>
+      <ul className="areas">${areas.map(a => html`<li key=${a.key}>
+        <button className="area" onClick=${() => go(a.tab)}>
+          <span className="area-top"><span>${a.label}</span><span className="num">${a.v[1] ? `${a.v[0]} מתוך ${a.v[1]}` : 'עוד אין'}</span></span>
+          <span className="bar"><span style=${{ width: pct(a.v[0], a.v[1]) + '%' }}></span></span>
+        </button></li>`)}</ul>
+    </section>
+
+    <section className="card">
+      <div className="sec-title">
+        <h2 className="h2">הבא בתור</h2>
+        <div className="seg" role="group" aria-label="סינון לפי אחראי">
+          ${[['all', 'הכל'], ['dor', 'דור'], ['bar', 'בר']].map(([k, l]) => html`<button key=${k} className=${who === k ? 'on' : ''} aria-pressed=${who === k} onClick=${() => setWho(k)}>${l}</button>`)}
         </div>
-      );
-    }
-    function Card({ title, subtitle, icon, accent='blue', children }) {
-      const head = { blue:'text-blue-600 bg-blue-50', purple:'text-purple-600 bg-purple-50', amber:'text-amber-600 bg-amber-50', emerald:'text-emerald-600 bg-emerald-50', rose:'text-rose-600 bg-rose-50' }[accent];
-      return (
-        <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 sm:p-5">
-          <header className="flex items-center gap-3 mb-4">
-            <span className={`w-9 h-9 rounded-xl grid place-items-center ${head}`}>{icon}</span>
-            <div>
-              <h3 className="font-bold text-slate-800 leading-none">{title}</h3>
-              {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
-            </div>
-          </header>
-          {children}
-        </section>
-      );
-    }
-    function ListBlock({ title, subtitle, icon, accent, items, onChange }) {
-      const add = (text) => onChange([...items, li(text)]);
-      const toggle = (id) => onChange(items.map(x=>x.id===id?{...x,done:!x.done}:x));
-      const del = (id) => onChange(items.filter(x=>x.id!==id));
-      const done = items.filter(x=>x.done).length;
-      return (
-        <Card title={title} subtitle={`${done}/${items.length} הושלמו`} icon={icon} accent={accent}>
-          <div className="space-y-2 mb-3">
-            {items.length===0 && <p className="text-sm text-slate-400 py-4 text-center">אין פריטים עדיין — הוסיפו למטה.</p>}
-            {items.map(it => <ChecklistItem key={it.id} item={it} accent={accent} onToggle={()=>toggle(it.id)} onDelete={()=>del(it.id)} />)}
-          </div>
-          <AddRow placeholder="הוספת פריט חדש…" onAdd={add} accent={accent} />
-        </Card>
-      );
-    }
+      </div>
+      ${next.length === 0 ? html`<p className="empty">אין משימות פתוחות${who !== 'all' ? ' עם השם הזה' : ''}.</p>`
+        : html`<ul className="rows">${next.map(({ t, k }) => html`<${TaskRow} key=${t.id} t=${t} k=${k} tag=${LISTS[k].short} showWho=${!(k === 'address_dor' || k === 'address_bar')} />`)}</ul>`}
+    </section>
 
-    /* ---------------- views ---------------- */
-    const Row = ({label, val}) => (
-      <div className="flex justify-between items-center py-2.5 text-sm"><span className="text-slate-500">{label}</span><span className="font-semibold text-slate-700">{val}</span></div>
-    );
-    function Dashboard({ allTasks, boxes, movers, purchases }) {
-      const totalTasks = allTasks.length, doneTasks = allTasks.filter(t=>t.done).length;
-      const pct = totalTasks ? Math.round(doneTasks/totalTasks*100) : 0;
-      const purchasesSum = purchases.reduce((s,p)=>s+(Number(p.cost)||0),0);
-      const moversCost = Number(movers.cost)||0, grand = moversCost + purchasesSum;
-      const fmt = (n)=>'₪'+ (Number(n)||0).toLocaleString('he-IL');
-      const Stat = ({label, value, icon, accent}) => {
-        const c = { blue:'text-blue-600 bg-blue-50', emerald:'text-emerald-600 bg-emerald-50', amber:'text-amber-600 bg-amber-50', purple:'text-purple-600 bg-purple-50' }[accent];
-        return (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-3">
-            <span className={`w-11 h-11 rounded-xl grid place-items-center ${c}`}>{icon}</span>
-            <div className="min-w-0"><p className="text-xs text-slate-400">{label}</p><p className="font-extrabold text-slate-800 text-lg leading-tight truncate">{value}</p></div>
-          </div>
-        );
-      };
-      return (
-        <div className="space-y-4">
-          <section className="bg-gradient-to-l from-blue-600 to-indigo-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-200/50">
-            <div className="flex items-center justify-between mb-1"><h2 className="font-extrabold text-xl">התקדמות כללית</h2><span className="font-extrabold text-2xl">{pct}%</span></div>
-            <p className="text-blue-100 text-sm mb-3">{doneTasks} מתוך {totalTasks} משימות הושלמו</p>
-            <div className="h-3 bg-white/25 rounded-full overflow-hidden"><div className="h-full bg-white rounded-full transition-all duration-500" style={{width: pct+'%'}} /></div>
-          </section>
-          <div className="grid grid-cols-2 gap-3">
-            <Stat label="ארגזים ארוזים" value={boxes.length} icon={<Icon.Box size={22}/>} accent="emerald" />
-            <Stat label="עלות מובילים" value={fmt(moversCost)} icon={<Icon.Truck size={22}/>} accent="amber" />
-            <Stat label="סה״כ רכישות" value={fmt(purchasesSum)} icon={<Icon.Cart size={22}/>} accent="purple" />
-            <Stat label="סה״כ עלויות" value={fmt(grand)} icon={<Icon.Wallet size={22}/>} accent="blue" />
-          </div>
-          <Card title="סיכום תקציב" subtitle="מובילים + רכישות" icon={<Icon.Wallet size={18}/>} accent="blue">
-            <div className="divide-y divide-slate-100">
-              <Row label="מובילים" val={fmt(moversCost)} />
-              <Row label="רכישות" val={fmt(purchasesSum)} />
-              <div className="flex justify-between items-center pt-3 mt-1"><span className="font-extrabold text-slate-800">סה״כ להוצאה</span><span className="font-extrabold text-blue-600 text-lg">{fmt(grand)}</span></div>
-            </div>
-          </Card>
-        </div>
-      );
-    }
-    function AddressView({ shared, dor, bar, set }) {
-      return (
-        <div className="space-y-4">
-          <ListBlock title="שינויי כתובת — משותף" icon={<Icon.Home size={18}/>} accent="purple" items={shared} onChange={v=>set(K.addr_shared, v)} />
-          <ListBlock title="הכספים של דור" icon={<Icon.User size={18}/>} accent="blue" items={dor} onChange={v=>set(K.addr_dor, v)} />
-          <ListBlock title="הכספים של בר" icon={<Icon.User size={18}/>} accent="rose" items={bar} onChange={v=>set(K.addr_bar, v)} />
-        </div>
-      );
-    }
-    function LogisticsView({ logistics, prep, set }) {
-      return (
-        <div className="space-y-4">
-          <ListBlock title="לוגיסטיקה" icon={<Icon.List size={18}/>} accent="amber" items={logistics} onChange={v=>set(K.logistics, v)} />
-          <ListBlock title="הכנת הדירה" icon={<Icon.Home size={18}/>} accent="emerald" items={prep} onChange={v=>set(K.prep, v)} />
-        </div>
-      );
-    }
-    function BoxCard({ box, onName, onAddItem, onDelItem, onDelBox }) {
-      const [t, setT] = useState('');
-      const add = () => { const v=t.trim(); if(!v) return; onAddItem(v); setT(''); };
-      return (
-        <section className="pop bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <header className="flex items-center gap-3 p-4 bg-emerald-50/60">
-            <span className="shrink-0 w-10 h-10 rounded-xl bg-emerald-600 text-white grid place-items-center font-extrabold">{box.number}</span>
-            <input data-synckey="boxes" value={box.name} onChange={e=>onName(e.target.value)} placeholder="שם הארגז (למשל: מטבח)"
-              className="flex-1 min-w-0 bg-transparent font-bold text-slate-800 text-[15px] placeholder:text-slate-400 placeholder:font-medium" />
-            <DeleteBtn onClick={onDelBox} title="מחיקת ארגז" />
-          </header>
-          <div className="p-4 pt-3">
-            <div className="space-y-1.5 mb-3">
-              {box.items.length===0 && <p className="text-xs text-slate-400 text-center py-2">אין פריטים בארגז</p>}
-              {box.items.map(it=>(
-                <div key={it.id} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                  <span className="flex-1 text-sm text-slate-600">{it.text}</span>
-                  <DeleteBtn onClick={()=>onDelItem(it.id)} />
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <input value={t} onChange={e=>setT(e.target.value)} onKeyDown={e=>e.key==='Enter'&&add()} placeholder="הוספת פריט…"
-                className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-emerald-400 focus:border-transparent" />
-              <button onClick={add} className="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-3.5 grid place-items-center"><Icon.Plus size={18}/></button>
-            </div>
-          </div>
-        </section>
-      );
-    }
-    function BoxesView({ boxes, addBox, updateBox, delBox }) {
-      const [q, setQ] = useState('');
-      const filtered = boxes.filter(b=>{
-        const s=q.trim().toLowerCase(); if(!s) return true;
-        return String(b.number).includes(s) || (b.name||'').toLowerCase().includes(s) || (b.items||[]).some(it=>it.text.toLowerCase().includes(s));
-      });
-      return (
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"><Icon.Search size={18}/></span>
-              <input value={q} onChange={e=>setQ(e.target.value)} placeholder="חיפוש לפי מספר, שם או פריט…"
-                className="w-full bg-white border border-slate-200 rounded-xl pr-10 pl-3.5 py-2.5 text-sm shadow-sm focus:ring-2 focus:ring-emerald-400 focus:border-transparent" />
-            </div>
-            <button onClick={addBox} className="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-4 flex items-center gap-1.5 font-semibold text-sm shadow-sm"><Icon.Plus size={18}/> ארגז</button>
-          </div>
-          {boxes.length===0 && <p className="text-center text-slate-400 text-sm py-10">אין ארגזים עדיין. לחצו "ארגז" כדי להוסיף.</p>}
-          {boxes.length>0 && filtered.length===0 && <p className="text-center text-slate-400 text-sm py-10">לא נמצאו ארגזים תואמים.</p>}
-          <div className="space-y-3">
-            {filtered.map(b=>(
-              <BoxCard key={b.id} box={b}
-                onName={(name)=>updateBox({...b, name})}
-                onAddItem={(text)=>updateBox({...b, items:[...(b.items||[]), {id:uid(), text}]})}
-                onDelItem={(iid)=>updateBox({...b, items:(b.items||[]).filter(x=>x.id!==iid)})}
-                onDelBox={()=>delBox(b.id)} />
-            ))}
-          </div>
-        </div>
-      );
-    }
-    function PurchasesView({ items, set }) {
-      const change = (v)=>set(K.purchases, v);
-      const add = (text)=>change([...items, {id:uid(), text, cost:0, done:false}]);
-      const total = items.reduce((s,p)=>s+(Number(p.cost)||0),0);
-      const fmt = (n)=>'₪'+ (Number(n)||0).toLocaleString('he-IL');
-      return (
-        <div className="space-y-4">
-          <section className="bg-gradient-to-l from-rose-500 to-pink-500 rounded-2xl p-5 text-white shadow-lg shadow-rose-200/50 flex items-center justify-between">
-            <div><p className="text-rose-100 text-sm">סה״כ רכישות</p><p className="font-extrabold text-2xl">{fmt(total)}</p></div>
-            <Icon.Cart size={34} className="text-white/70"/>
-          </section>
-          <Card title="רשימת רכישות" icon={<Icon.Cart size={18}/>} accent="rose">
-            <div className="space-y-2 mb-3">
-              {items.length===0 && <p className="text-sm text-slate-400 py-4 text-center">אין רכישות עדיין.</p>}
-              {items.map(p=>(
-                <div key={p.id} className="flex items-center gap-2.5 bg-white border border-slate-100 rounded-xl px-3 py-2.5 shadow-sm">
-                  <button onClick={()=>change(items.map(x=>x.id===p.id?{...x,done:!x.done}:x))} className={`shrink-0 w-5 h-5 rounded-md border-2 grid place-items-center ${p.done?'bg-rose-600 border-rose-600':'border-slate-300'}`}>
-                    {p.done && <Icon.Check size={13} className="text-white" sw={3}/>}
-                  </button>
-                  <span className={`flex-1 text-[15px] ${p.done?'line-through text-slate-400':'text-slate-700'}`}>{p.text}</span>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <span className="text-slate-400 text-sm">₪</span>
-                    <input data-synckey="purchases" type="number" value={p.cost||''} placeholder="0"
-                      onChange={e=>change(items.map(x=>x.id===p.id?{...x,cost:e.target.value}:x))}
-                      className="w-20 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-sm text-left" />
-                  </div>
-                  <DeleteBtn onClick={()=>change(items.filter(x=>x.id!==p.id))} />
-                </div>
-              ))}
-            </div>
-            <AddRow placeholder="הוספת פריט לרכישה…" onAdd={add} accent="rose" />
-          </Card>
-        </div>
-      );
-    }
-    function MoversView({ movers, set }) {
-      const upd = (patch)=>set(K.movers, {...movers, ...patch});
-      const F = ({label, children}) => (<label className="block"><span className="block text-sm font-semibold text-slate-600 mb-1.5">{label}</span>{children}</label>);
-      const inp = "w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent";
-      const remaining = (Number(movers.cost)||0) - (Number(movers.paid)||0);
-      return (
-        <div className="space-y-4">
-          <Card title="פרטי חברת ההובלה" icon={<Icon.Truck size={18}/>} accent="amber">
-            <div className="space-y-3">
-              <F label="שם החברה"><input data-synckey="movers" className={inp} value={movers.company} onChange={e=>upd({company:e.target.value})} placeholder="שם חברת ההובלה"/></F>
-              <F label="איש קשר / טלפון"><input data-synckey="movers" className={inp} value={movers.contact} onChange={e=>upd({contact:e.target.value})} placeholder="שם וטלפון"/></F>
-              <F label="תאריך ושעה"><input data-synckey="movers" className={inp} value={movers.date} onChange={e=>upd({date:e.target.value})} placeholder="למשל: 15/08 בשעה 09:00"/></F>
-              <div className="grid grid-cols-2 gap-3">
-                <F label="עלות כוללת (₪)"><input data-synckey="movers" type="number" className={inp+' text-left'} value={movers.cost||''} onChange={e=>upd({cost:e.target.value})} placeholder="0"/></F>
-                <F label="מקדמה ששולמה (₪)"><input data-synckey="movers" type="number" className={inp+' text-left'} value={movers.paid||''} onChange={e=>upd({paid:e.target.value})} placeholder="0"/></F>
-              </div>
-              <div className="flex justify-between items-center bg-amber-50 rounded-xl px-4 py-3"><span className="text-sm font-semibold text-amber-700">יתרה לתשלום</span><span className="font-extrabold text-amber-700">₪{(remaining).toLocaleString('he-IL')}</span></div>
-              <F label="הערות"><textarea data-synckey="movers" rows="3" className={inp} value={movers.notes} onChange={e=>upd({notes:e.target.value})} placeholder="הערות, פריטים מיוחדים, מדרגות…"/></F>
-            </div>
-          </Card>
-        </div>
-      );
-    }
+    <section className="card money" aria-label="כסף">
+      <div><span className="eyebrow">תקציב כולל</span><span className="val">${money(total)}</span></div>
+      <div><span className="eyebrow">שולם</span><span className="val">${money(paid)}</span></div>
+      <div><span className="eyebrow">נשאר לשלם</span><span className=${'val' + (total - paid > 0 ? ' due' : '')}>${money(Math.max(0, total - paid))}</span></div>
+    </section>
+  </div>`;
+}
 
-    /* ---------------- setup gate ---------------- */
-    function SetupGate({ error }) {
-      return (
-        <div className="h-full overflow-y-auto p-6 grid place-items-center">
-          <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 shadow-sm p-6 text-center">
-            <span className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-500 grid place-items-center mx-auto mb-4"><Icon.Alert size={28}/></span>
-            <h1 className="font-extrabold text-xl text-slate-800 mb-2">חסרות הגדרות Firebase</h1>
-            <p className="text-sm text-slate-500 leading-relaxed mb-4">
-              כדי שהאפליקציה תשמור ותסנכרן בין דור ובר, צריך להדביק את בלוק ההגדרות של פרויקט ה‑Firebase שלך בתוך קובץ ה‑HTML (במקום שמסומן <b>PASTE_</b>).
-              עקבו אחרי קובץ ההוראות שצורף.
-            </p>
-            {error && <p className="text-xs text-rose-500 bg-rose-50 rounded-lg p-2 mt-2 break-words">{error}</p>}
-          </div>
-        </div>
-      );
-    }
+/* ---------- prep: meters ---------- */
+function Meters({ meters }) {
+  const m = meters || {};
+  const rows = [['water', 'מים'], ['elec', 'חשמל'], ['gas', 'גז']];
+  return html`<section className="card">
+    <div className="sec-title"><div><h2 className="h2">קריאת מונים</h2><p className="muted">רושמים ביום המסירה, בשתי הדירות</p></div></div>
+    <div className="meters">
+      <div className="mrow mhead"><span></span><span>הדרים (יוצאים)</span><span>בנטל (נכנסים)</span></div>
+      ${rows.map(([k, l]) => html`<div className="mrow" key=${k}>
+        <span className="mlabel">${l}</span>
+        <${Field} value=${(m.old || {})[k] ?? ''} inputMode="decimal" dir="ltr" className="ltr" placeholder="0" label=${l + ' בדירה הישנה'} onCommit=${v => api.setMap('meters', { old: { [k]: v.trim() } })} />
+        <${Field} value=${(m.new || {})[k] ?? ''} inputMode="decimal" dir="ltr" className="ltr" placeholder="0" label=${l + ' בדירה החדשה'} onCommit=${v => api.setMap('meters', { new: { [k]: v.trim() } })} />
+      </div>`)}
+    </div>
+  </section>`;
+}
 
-    /* ---------------- sync status ---------------- */
-    function SyncStatus({ time, connErr, seeding }) {
-      const ok = !connErr;
-      return (
-        <div className="bg-slate-50 rounded-xl p-3 flex items-center gap-2.5">
-          <span className={`w-8 h-8 grid place-items-center rounded-lg ${ok?'bg-emerald-100 text-emerald-600':'bg-rose-100 text-rose-500'}`}>{ok ? <Icon.Cloud size={16}/> : <Icon.Alert size={16}/>}</span>
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] leading-none flex items-center gap-1.5">
-              <span className={`w-1.5 h-1.5 rounded-full ${ok?'bg-emerald-500':'bg-rose-500'}`}></span>
-              <span className="text-slate-400">{ok ? 'מחובר · בזמן אמת' : 'אין חיבור'}</span>
-            </p>
-            <p className="text-xs font-semibold text-slate-600 mt-1">{seeding ? 'מסנכרן…' : 'עודכן: ' + time}</p>
-          </div>
-        </div>
-      );
-    }
+/* ---------- boxes ---------- */
+function BoxCard({ b, open, q, onToggle }) {
+  const ro = useContext(RO);
+  const items = b.items || [];
+  const st = b.status || 'open';
+  return html`<article className="card box">
+    <div className="box-head" role="button" tabIndex="0" aria-expanded=${open} onClick=${onToggle}
+      onKeyDown=${e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(); } }}>
+      <span className="box-num" aria-label=${'ארגז ' + b.number}>${b.number}</span>
+      <span className="box-title">
+        <strong className=${b.name ? '' : 'unnamed'} dir="auto">${b.name || 'בלי שם עדיין'}</strong>
+        <span className="muted">${items.length} פריטים${b.fragile ? html` · <span className="fragile">שביר</span>` : ''}</span>
+      </span>
+      <button className=${'pill st-' + st} disabled=${ro} aria-label=${'סטטוס: ' + STATUS[st] + '. לחצו לשינוי'}
+        onClick=${e => { e.stopPropagation(); api.boxUpdate(b.id, { status: STATUS_NEXT[st] }); }}>${STATUS[st]}</button>
+      <span className=${'chev' + (open ? ' up' : '')}><${Icon} n="chev" s=${18} /></span>
+    </div>
+    ${open && html`<div className="box-body">
+      <div>
+        <label className="lbl" htmlFor=${'bn-' + b.id}>שם הארגז או החדר</label>
+        <${Field} id=${'bn-' + b.id} value=${b.name} className="boxed" placeholder="למשל: מטבח, כלים" onCommit=${v => api.boxUpdate(b.id, { name: v.trim() })} />
+      </div>
+      ${items.length > 0 ? html`<ul className="chips">${items.map(i => html`<li key=${i.id} className=${'chip' + (q && String(i.text).toLowerCase().includes(q) ? ' hit' : '')}>
+          <span dir="auto">${i.text}</span>
+          <${Del} small label=${'הסר ' + i.text} onClick=${() => api.boxRemoveItem(b.id, i)} />
+        </li>`)}</ul>` : html`<p className="muted">הארגז ריק. הוסיפו מה נכנס אליו.</p>`}
+      <${QuickAdd} placeholder="מה נכנס לארגז?" label="הוספת פריט לארגז"
+        onAdd=${text => api.boxAddItem(b.id, { id: uid(), text })} />
+      <div className="box-foot">
+        <label className="toggle"><input type="checkbox" checked=${!!b.fragile} disabled=${ro}
+          onChange=${e => api.boxUpdate(b.id, { fragile: e.target.checked })} /> שביר</label>
+        ${!ro && html`<button className="btn-ghost danger" onClick=${() => api.boxRemove(b, `ארגז ${b.number} נמחק`)}>מחק ארגז</button>`}
+      </div>
+    </div>`}
+  </article>`;
+}
 
-    /* ---------------- app ---------------- */
-    const TABS = [
-      { id:'dash', label:'סקירה ותקציב', icon:<Icon.Home size={20}/> },
-      { id:'addr', label:'שינויי כתובת', icon:<Icon.Pin size={20}/> },
-      { id:'log',  label:'לוגיסטיקה והכנה', icon:<Icon.List size={20}/> },
-      { id:'box',  label:'ניהול ארגזים', icon:<Icon.Box size={20}/> },
-      { id:'buy',  label:'רכישות', icon:<Icon.Cart size={20}/> },
-      { id:'mov',  label:'מובילים', icon:<Icon.Truck size={20}/> },
-      { id:'note', label:'פתקים כלליים', icon:<Icon.Note size={20}/> },
-    ];
+function Boxes({ boxes }) {
+  const ro = useContext(RO);
+  const [q, setQ] = useState('');
+  const [openId, setOpenId] = useState(null);
+  const qq = q.trim().toLowerCase();
+  const sorted = useMemo(() => [...boxes].sort((a, b) => num(a.number) - num(b.number)), [boxes]);
+  const itemHit = b => !!qq && (b.items || []).some(i => String(i.text || '').toLowerCase().includes(qq));
+  const hit = b => !qq || String(b.number).includes(qq) || String(b.name || '').toLowerCase().includes(qq) || itemHit(b);
+  const shown = sorted.filter(hit);
+  const closed = boxes.filter(b => b.status === 'closed' || b.status === 'unpacked').length;
+  const fragile = boxes.filter(b => b.fragile).length;
+  const add = () => {
+    const n = boxes.reduce((m, b) => Math.max(m, num(b.number)), 0) + 1;
+    const id = api.boxAdd({ number: n, name: '', items: [], status: 'open', fragile: false });
+    if (id) { setOpenId(id); setQ(''); }
+  };
+  return html`<div className="stack">
+    <div className="toolbar">
+      <label className="search"><${Icon} n="search" s=${18} />
+        <input className="fld" type="search" dir="auto" placeholder="מספר, שם או פריט" aria-label="חיפוש ארגזים" value=${q} onChange=${e => setQ(e.target.value)} enterKeyHint="search" autoComplete="off" />
+      </label>
+      ${!ro && html`<button className="btn" onClick=${add}><${Icon} n="plus" s=${18} />ארגז</button>`}
+    </div>
+    <p className="stats">${boxes.length} ארגזים · ${closed} סגורים${fragile ? ` · ${fragile} שבירים` : ''}</p>
+    ${boxes.length === 0 ? html`<div className="card card-pad"><p className="h2">עוד אין ארגזים</p><p className="muted">לחצו על ״ארגז״ כדי לפתוח את הראשון. כל ארגז מקבל מספר רץ, שאותו כותבים בטוש על הקרטון.</p></div>`
+      : shown.length === 0 ? html`<p className="empty">לא נמצא ארגז שמתאים ל־<bdi>${q}</bdi></p>`
+      : html`<div className="boxes">${shown.map(b => html`<${BoxCard} key=${b.id} b=${b} q=${qq} open=${openId === b.id || itemHit(b)} onToggle=${() => setOpenId(openId === b.id ? null : b.id)} />`)}</div>`}
+  </div>`;
+}
 
-    function App() {
-      if (!db) return <SetupGate error={initError} />;
+/* ---------- budget ---------- */
+function Movers({ movers }) {
+  const m = movers || {};
+  const save = k => v => api.setMap('movers', { [k]: v });
+  const [copied, setCopied] = useState(false);
+  const balance = num(m.cost) - num(m.paid);
+  const copyPhone = () => {
+    const t = String(m.phone || '').trim(); if (!t) return;
+    const done = () => { setCopied(true); setTimeout(() => setCopied(false), 1500); };
+    const fallback = () => { const el = document.getElementById('mv-phone'); if (el) { el.focus(); el.select(); } };
+    try { navigator.clipboard.writeText(t).then(done, fallback); } catch (e) { fallback(); }
+  };
+  return html`<section className="card">
+    <div className="sec-title"><h2 className="h2">ההובלה</h2><span className="muted">${dateText(m.date) || 'אין תאריך עדיין'}</span></div>
+    <div className="form-grid">
+      <div className="full"><label className="lbl" htmlFor="mv-company">חברת הובלה</label><${Field} id="mv-company" value=${m.company} placeholder="שם החברה" onCommit=${save('company')} /></div>
+      <div><label className="lbl" htmlFor="mv-contact">איש קשר</label><${Field} id="mv-contact" value=${m.contact} placeholder="שם" onCommit=${save('contact')} /></div>
+      <div><label className="lbl" htmlFor="mv-phone">טלפון</label>
+        <div className="with-btn"><${Field} id="mv-phone" type="tel" inputMode="tel" dir="ltr" className="ltr" value=${m.phone} placeholder="050-0000000" onCommit=${save('phone')} />
+        ${m.phone ? html`<a className="icon-btn" href=${'tel:' + String(m.phone).replace(/[^\d+]/g, '')} aria-label="חייג"><${Icon} n="phone" s=${18} /></a>` : null}
+        <button className="icon-btn" type="button" aria-label="העתק טלפון" onClick=${copyPhone}>${copied ? html`<${Icon} n="check" s=${18} />` : html`<${Icon} n="copy" s=${18} />`}</button></div></div>
+      <div className="full"><label className="lbl" htmlFor="mv-date">תאריך ושעה</label><${Field} id="mv-date" type="datetime-local" dir="ltr" className="ltr" value=${m.date} commitOnChange onCommit=${save('date')} /></div>
+      <div><label className="lbl" htmlFor="mv-cost">מחיר כולל (₪)</label><${Field} id="mv-cost" inputMode="decimal" dir="ltr" className="ltr" value=${m.cost ? m.cost : ''} placeholder="0" onCommit=${v => save('cost')(num(v))} /></div>
+      <div><label className="lbl" htmlFor="mv-paid">מקדמה ששולמה (₪)</label><${Field} id="mv-paid" inputMode="decimal" dir="ltr" className="ltr" value=${m.paid ? m.paid : ''} placeholder="0" onCommit=${v => save('paid')(num(v))} /></div>
+      <div className="full"><label className="lbl" htmlFor="mv-notes">הערות</label><${Field} id="mv-notes" multiline debounce=${900} value=${m.notes} placeholder="קומה, מעלית, חניה, פריטים מיוחדים…" onCommit=${save('notes')} /></div>
+    </div>
+    <div className="balance"><span>יתרה לתשלום ביום ההובלה</span><span className="val">${money(Math.max(0, balance))}</span></div>
+  </section>`;
+}
 
-      const [ready, setReady] = useState(false);
-      const [tab, setTab] = useState('dash');
-      const [drawer, setDrawer] = useState(false);
-      const [lastSync, setLastSync] = useState(null);
-      const [saveErr, setSaveErr] = useState(false);
-      const [connErr, setConnErr] = useState(false);
-      const [pulse, setPulse] = useState(false);
+function Purchases({ purchases }) {
+  const ro = useContext(RO);
+  const all = purchases || [];
+  const items = [...all.filter(p => !p.done), ...all.filter(p => p.done)];
+  const total = sumBy(all, p => num(p.cost));
+  const bought = all.filter(p => p.done);
+  const [name, setName] = useState(''); const [cost, setCost] = useState(''); const ref = useRef(null);
+  const submit = e => {
+    e.preventDefault(); const t = name.trim(); if (!t) return;
+    api.addItem('purchases', { id: uid(), text: t, cost: num(cost), done: false });
+    setName(''); setCost(''); ref.current && ref.current.focus();
+  };
+  return html`<section className="card">
+    <div className="sec-title"><div><h2 className="h2">קניות לבית</h2><p className="muted">נקנו ${bought.length} מתוך ${all.length} · שולם ${money(sumBy(bought, p => num(p.cost)))}</p></div><span className="h2 num">${money(total)}</span></div>
+    ${!ro && html`<form className="buy-form" onSubmit=${submit}>
+      <input ref=${ref} className="fld" dir="auto" value=${name} onChange=${e => setName(e.target.value)} placeholder="מה צריך לקנות?" aria-label="שם הפריט" enterKeyHint="next" autoComplete="off" />
+      <span className="cost-wrap"><input className="fld ltr" dir="ltr" inputMode="decimal" value=${cost} onChange=${e => setCost(e.target.value)} placeholder="0" aria-label="מחיר" enterKeyHint="done" autoComplete="off" /><span className="cur">₪</span></span>
+      <button className="qa-btn" type="submit" aria-label="הוסף קנייה" disabled=${!name.trim()}><${Icon} n="plus" s=${20} /></button>
+    </form>`}
+    ${items.length === 0 ? html`<p className="empty">אין עדיין קניות ברשימה.</p>` : html`<ul className="rows">${items.map(p => html`<li key=${p.id} className=${'row' + (p.done ? ' done' : '')}>
+      <button className="chk" role="checkbox" aria-checked=${!!p.done} aria-label="סמן כנקנה" disabled=${ro} onClick=${() => api.patchItem('purchases', p.id, { done: !p.done })}><${Icon} n="check" s=${15} /></button>
+      <div className="row-main"><${Field} value=${p.text} label="שם הפריט" required onCommit=${v => api.patchItem('purchases', p.id, { text: v.trim() })} /></div>
+      <span className="cost-wrap"><${Field} value=${p.cost ? p.cost : ''} inputMode="decimal" dir="ltr" className="ltr" placeholder="0" label=${'מחיר ' + p.text} onCommit=${v => api.patchItem('purchases', p.id, { cost: num(v) })} /><span className="cur">₪</span></span>
+      <${Del} label="מחק קנייה" onClick=${() => api.removeItem('purchases', p.id, 'הקנייה נמחקה')} />
+    </li>`)}</ul>`}
+  </section>`;
+}
 
-      const [addrShared, setAddrShared] = useState(D.address_shared);
-      const [addrDor, setAddrDor] = useState(D.address_dor);
-      const [addrBar, setAddrBar] = useState(D.address_bar);
-      const [logistics, setLogistics] = useState(D.logistics);
-      const [prep, setPrep] = useState(D.prep);
-      const [purchases, setPurchases] = useState(D.purchases);
-      const [movers, setMovers] = useState(D.movers);
-      const [notes, setNotes] = useState(D.notes);
-      const [boxes, setBoxes] = useState([]);
+/* ---------- app ---------- */
+function App() {
+  const [tab, setTab] = useState(() => validTab(location.hash.slice(1)) || 'home');
+  const [S, setS] = useState({});
+  const [boxes, setBoxes] = useState([]);
+  const [got, setGot] = useState({});
+  const [conn, setConn] = useState(db ? 'connecting' : 'off');
+  const [pending, setPending] = useState(0);
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+  const sRef = useRef(S); sRef.current = S;
 
-      const setterFor = (k)=>({ address_shared:setAddrShared, address_dor:setAddrDor, address_bar:setAddrBar, logistics:setLogistics, prep:setPrep, purchases:setPurchases, movers:setMovers, notes:setNotes }[k]);
-      const timers = useRef({});
-      const editingKeys = useRef(new Set());
-      const pendingSnap = useRef({});
-      const firstSeen = useRef(new Set());
+  const showToast = t => { clearTimeout(toastTimer.current); setToast({ ...t, k: Date.now() }); toastTimer.current = setTimeout(() => setToast(null), t.undo ? 6000 : 4000); };
 
-      const flashErr = () => { setSaveErr(true); setTimeout(()=>setSaveErr(false), 3500); };
-      const flashPulse = () => { setPulse(true); setTimeout(()=>setPulse(false), 700); };
+  useEffect(() => {
+    api.get = key => sRef.current[key];
+    api.local = (key, fn) => setS(s => ({ ...s, [key]: fn(clone(s[key] ?? D[key])) }));
+    api.hooks.pending = d => setPending(p => Math.max(0, p + d));
+    api.hooks.error = msg => showToast({ msg, kind: 'err' });
+    api.hooks.undo = (msg, fn) => showToast({ msg, undo: fn });
+  }, []);
 
-      const applyNow = (key, value) => { if (key==='boxes') setBoxes(value); else { const s=setterFor(key); if (s) s(value); } };
-      const applyMaybe = (key, value) => { if (editingKeys.current.has(key)) pendingSnap.current[key] = value; else applyNow(key, value); };
+  useEffect(() => {
+    if (!db) return;
+    const unsubs = [];
+    const mark = k => setGot(g => (g[k] ? g : { ...g, [k]: true }));
+    SECTION_KEYS.forEach(key => {
+      unsubs.push(sectionDoc(key).onSnapshot(snap => {
+        setConn('live');
+        if (!snap.exists) { sectionDoc(key).set({ v: D[key] }).catch(() => {}); setS(s => ({ ...s, [key]: D[key] })); }
+        else setS(s => ({ ...s, [key]: snap.data().v }));
+        mark(key);
+      }, err => { console.error(err); setConn('off'); mark(key); }));
+    });
+    unsubs.push(boxesCol().onSnapshot(snap => {
+      setBoxes(snap.docs.map(d => ({ ...d.data(), id: d.id })));
+      mark('boxes');
+    }, err => { console.error(err); setConn('off'); mark('boxes'); }));
+    const fallback = setTimeout(() => setGot(g => ({ ...g, all: true })), 5000);
+    return () => { unsubs.forEach(f => f()); clearTimeout(fallback); };
+  }, []);
 
-      // realtime listeners
-      useEffect(() => {
-        const unsubs = [];
-        Object.keys(D).forEach(key => {
-          const u = sectionDoc(key).onSnapshot(
-            (snap) => {
-              setConnErr(false);
-              if (!snap.exists) { sectionDoc(key).set({ v: D[key] }).catch(flashErr); applyMaybe(key, D[key]); }
-              else { applyMaybe(key, snap.data().v); setLastSync(Date.now()); flashPulse(); }
-              if (!firstSeen.current.has(key)) { firstSeen.current.add(key); if (firstSeen.current.size >= Object.keys(D).length) setReady(true); }
-            },
-            (err) => { setConnErr(true); setReady(true); }
-          );
-          unsubs.push(u);
-        });
-        const ub = boxesCol().orderBy('number').onSnapshot(
-          (snap) => { setConnErr(false); const arr = snap.docs.map(d=>({ id:d.id, ...d.data() })); applyMaybe('boxes', arr); setLastSync(Date.now()); flashPulse(); },
-          (err) => { setConnErr(true); }
-        );
-        unsubs.push(ub);
-        const fb = setTimeout(()=>setReady(true), 4000);
-        return () => { unsubs.forEach(u=>u&&u()); clearTimeout(fb); };
-      }, []);
+  useEffect(() => {
+    const on = () => { const t = validTab(location.hash.slice(1)); if (t) setTab(t); };
+    window.addEventListener('hashchange', on); return () => window.removeEventListener('hashchange', on);
+  }, []);
 
-      // suppress remote apply while typing in a bound field
-      useEffect(() => {
-        const fin = (e) => { const k = e.target?.dataset?.synckey; if (k) editingKeys.current.add(k); };
-        const fout = (e) => { const k = e.target?.dataset?.synckey; if (k) { editingKeys.current.delete(k); if (pendingSnap.current[k] !== undefined) { applyNow(k, pendingSnap.current[k]); delete pendingSnap.current[k]; } } };
-        document.addEventListener('focusin', fin);
-        document.addEventListener('focusout', fout);
-        return () => { document.removeEventListener('focusin', fin); document.removeEventListener('focusout', fout); };
-      }, []);
+  // hide the bottom bar while typing so the keyboard never pushes it over the field
+  useEffect(() => {
+    const isField = el => el && ((el.tagName === 'INPUT' && !['checkbox', 'button', 'submit'].includes(el.type)) || el.tagName === 'TEXTAREA');
+    const fin = e => { if (isField(e.target)) document.body.classList.add('typing'); };
+    const fout = () => setTimeout(() => { if (!isField(document.activeElement)) document.body.classList.remove('typing'); }, 80);
+    document.addEventListener('focusin', fin); document.addEventListener('focusout', fout);
+    return () => { document.removeEventListener('focusin', fin); document.removeEventListener('focusout', fout); };
+  }, []);
 
-      const scheduleWrite = (timerKey, fn) => {
-        if (timers.current[timerKey]) clearTimeout(timers.current[timerKey]);
-        timers.current[timerKey] = setTimeout(async () => {
-          try { await fn(); setLastSync(Date.now()); } catch (e) { flashErr(); }
-        }, 400);
-      };
+  const go = t => { setTab(t); try { if (location.hash !== '#' + t) location.hash = t; } catch (e) {} window.scrollTo({ top: 0 }); };
 
-      const setSection = useCallback((key, value) => {
-        const s = setterFor(key); if (s) s(value);                 // optimistic
-        scheduleWrite(key, () => sectionDoc(key).set({ v: value }));
-      }, []);
+  const ready = conn === 'off' || got.all || (SECTION_KEYS.every(k => got[k]) && got.boxes);
+  const openCount = ks => ks.reduce((n, k) => n + (S[k] || []).filter(t => !t.done).length, 0);
+  const badges = {
+    address: openCount(['address_shared', 'address_dor', 'address_bar']),
+    prep: openCount(['logistics', 'prep', 'notes']),
+    boxes: boxes.filter(b => (b.status || 'open') === 'open').length,
+    budget: openCount(['purchases']),
+  };
+  const navBtns = TABS.map(t => html`<button key=${t.id} className=${'nav-btn' + (tab === t.id ? ' on' : '')} aria-current=${tab === t.id ? 'page' : null} onClick=${() => go(t.id)}>
+    <${Icon} n=${t.icon} s=${22} /><span>${t.label}</span>${badges[t.id] ? html`<span className="badge">${badges[t.id]}</span>` : null}</button>`);
 
-      // boxes
-      const addBox = async () => {
-        const nextNum = boxes.reduce((m,b)=>Math.max(m, Number(b.number)||0), 0) + 1;
-        try { await boxesCol().add({ number: nextNum, name:'', items: [] }); } catch (e) { flashErr(); }
-      };
-      const updateBox = (box) => {
-        setBoxes(prev => prev.map(b=>b.id===box.id?box:b));         // optimistic
-        scheduleWrite('box:'+box.id, () => boxesCol().doc(box.id).set({ number: box.number, name: box.name, items: box.items }));
-      };
-      const delBox = async (id) => { try { await boxesCol().doc(id).delete(); } catch (e) { flashErr(); } };
+  const syncCls = conn === 'off' ? 'off' : pending > 0 ? 'saving' : '';
+  const syncTxt = conn === 'off' ? 'אין חיבור' : conn === 'connecting' ? 'מתחבר…' : pending > 0 ? 'שומר…' : 'מסונכרן';
+  const title = tab === 'home' ? 'מעבר לבנטל' : TABS.find(t => t.id === tab).label;
 
-      const resetAll = async () => {
-        if (!confirm('לאפס את כל הנתונים ולחזור לברירת המחדל? פעולה זו בלתי הפיכה ומשפיעה על שניכם.')) return;
-        try {
-          for (const k of Object.keys(D)) await sectionDoc(k).set({ v: D[k] });
-          const snap = await boxesCol().get();
-          for (const d of snap.docs) await d.ref.delete();
-        } catch (e) { flashErr(); }
-        setDrawer(false);
-      };
+  let view;
+  if (!ready) view = html`<div className="stack"><div className="card skel" style=${{ height: 170 }}></div><div className="card skel" style=${{ height: 240 }}></div><div className="card skel" style=${{ height: 120 }}></div></div>`;
+  else if (tab === 'home') view = html`<${Home} S=${S} boxes=${boxes} go=${go} />`;
+  else if (tab === 'address') view = html`<div className="stack">${['address_shared', 'address_dor', 'address_bar'].map(k => html`<${TaskList} key=${k} k=${k} items=${S[k]} />`)}</div>`;
+  else if (tab === 'prep') view = html`<div className="stack"><${TaskList} k="logistics" items=${S.logistics} /><${TaskList} k="prep" items=${S.prep} /><${Meters} meters=${S.meters} /><${TaskList} k="notes" items=${S.notes} /></div>`;
+  else if (tab === 'boxes') view = html`<${Boxes} boxes=${boxes} />`;
+  else view = html`<div className="stack"><${Movers} movers=${S.movers} /><${Purchases} purchases=${S.purchases} /></div>`;
 
-      const allTasks = [...addrShared, ...addrDor, ...addrBar, ...logistics, ...prep];
-      const time = lastSync ? new Date(lastSync).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}) : '—';
+  return html`<${RO.Provider} value=${!db}>
+    <nav className="side" aria-label="ניווט"><div className="side-brand">מעבר לבנטל</div>${navBtns}</nav>
+    <div className="shell">
+      <header className="top"><div className="top-inner">
+        <div><h1 className="brand">${title}</h1><div className="brand-sub">דור ובר · כפר יונה</div></div>
+        <span className=${'sync ' + syncCls} role="status"><i></i>${syncTxt}</span>
+      </div></header>
+      <main className="main">
+        ${conn === 'off' && html`<p className="note warn">אין חיבור למאגר המשותף. בדקו אינטרנט, ואם זה נמשך, את חוקי האבטחה של Firestore.</p>`}
+        ${view}
+      </main>
+    </div>
+    <nav className="bottom" aria-label="ניווט">${navBtns}</nav>
+    ${toast && html`<div key=${toast.k} className=${'toast' + (toast.kind === 'err' ? ' err' : '')} role="status">
+      <span>${toast.msg}</span>
+      ${toast.undo && html`<button className="toast-btn" onClick=${() => { toast.undo(); setToast(null); }}>ביטול</button>`}
+    </div>`}
+  <//>`;
+}
 
-      if (!ready) {
-        return (
-          <div className="h-full grid place-items-center text-slate-400">
-            <div className="flex flex-col items-center gap-3"><Icon.Refresh size={30} className="animate-spin text-blue-500"/><p className="text-sm">מתחבר לנתונים המשותפים…</p></div>
-          </div>
-        );
-      }
+ReactDOM.createRoot(document.getElementById('root')).render(html`<${App} />`);
 
-      const Nav = () => (
-        <nav className="flex flex-col gap-1">
-          {TABS.map(t=>(
-            <button key={t.id} onClick={()=>{ setTab(t.id); setDrawer(false); }}
-              className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-[15px] font-semibold transition-colors ${tab===t.id?'bg-blue-600 text-white shadow-md shadow-blue-200/60':'text-slate-500 hover:bg-slate-100'}`}>
-              {t.icon} {t.label}
-            </button>
-          ))}
-        </nav>
-      );
-
-      return (
-        <div className="h-full flex bg-slate-50">
-          <aside className="hidden md:flex w-72 shrink-0 flex-col border-l border-slate-200 bg-white p-4">
-            <div className="mb-5 px-1">
-              <h1 className="font-extrabold text-xl text-slate-800">מעבר דירה 🏡</h1>
-              <p className="text-xs text-slate-400 mt-1">דור &amp; בר · כפר יונה</p>
-              <div className="mt-3 text-[11px] text-slate-400 bg-slate-50 rounded-lg p-2.5 leading-relaxed">
-                <div>מ־<b className="text-slate-500">הדרים 7/11</b></div><div>אל־<b className="text-slate-500">בנטל 2/10</b></div>
-              </div>
-            </div>
-            <Nav/>
-            <div className="mt-auto pt-4 space-y-2">
-              <SyncStatus time={time} connErr={connErr} seeding={false} />
-              <button onClick={resetAll} className="w-full flex items-center justify-center gap-2 text-xs text-slate-400 hover:text-rose-500 py-2 transition-colors"><Icon.Reset size={14}/> איפוס נתונים</button>
-            </div>
-          </aside>
-
-          {drawer && (
-            <div className="fixed inset-0 z-40 md:hidden" onClick={()=>setDrawer(false)}>
-              <div className="absolute inset-0 bg-slate-900/40" />
-              <aside onClick={e=>e.stopPropagation()} className="absolute top-0 right-0 h-full w-72 bg-white p-4 shadow-2xl flex flex-col" style={{animation:'slidein .2s ease-out'}}>
-                <div className="mb-5 flex items-start justify-between">
-                  <div><h1 className="font-extrabold text-xl text-slate-800">מעבר דירה 🏡</h1><p className="text-xs text-slate-400 mt-1">דור &amp; בר · כפר יונה</p></div>
-                  <button onClick={()=>setDrawer(false)} className="w-8 h-8 grid place-items-center rounded-full bg-slate-100 text-slate-500"><Icon.X size={18}/></button>
-                </div>
-                <Nav/>
-                <div className="mt-auto pt-4 space-y-2">
-                  <SyncStatus time={time} connErr={connErr} seeding={false} />
-                  <button onClick={resetAll} className="w-full flex items-center justify-center gap-2 text-xs text-slate-400 hover:text-rose-500 py-2"><Icon.Reset size={14}/> איפוס נתונים</button>
-                </div>
-              </aside>
-            </div>
-          )}
-
-          <div className="flex-1 flex flex-col min-w-0">
-            <header className="md:hidden sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200 px-4 py-3 flex items-center justify-between">
-              <button onClick={()=>setDrawer(true)} className="w-9 h-9 grid place-items-center rounded-xl bg-slate-100 text-slate-600"><Icon.Menu size={20}/></button>
-              <h2 className="font-extrabold text-slate-800">{TABS.find(t=>t.id===tab)?.label}</h2>
-              <span className={`w-9 h-9 grid place-items-center rounded-xl ${connErr?'bg-rose-50 text-rose-500':'bg-emerald-50 text-emerald-600'}`}>
-                <Icon.Cloud size={18} className={pulse?'animate-pulse':''}/>
-              </span>
-            </header>
-            <header className="hidden md:flex sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200 px-6 py-4 items-center justify-between">
-              <h2 className="font-extrabold text-lg text-slate-800">{TABS.find(t=>t.id===tab)?.label}</h2>
-              <span className={`flex items-center gap-2 text-sm font-semibold rounded-xl px-3.5 py-2 ${connErr?'bg-rose-50 text-rose-600':'bg-emerald-50 text-emerald-600'}`}>
-                <span className={`w-2 h-2 rounded-full ${connErr?'bg-rose-500':'bg-emerald-500'} ${pulse?'animate-ping':''}`}></span>
-                {connErr ? 'אין חיבור' : 'מסונכרן בזמן אמת'}
-              </span>
-            </header>
-
-            <main className="flex-1 overflow-y-auto p-4 sm:p-6 max-w-3xl w-full mx-auto">
-              {tab==='dash' && <Dashboard allTasks={allTasks} boxes={boxes} movers={movers} purchases={purchases} />}
-              {tab==='addr' && <AddressView shared={addrShared} dor={addrDor} bar={addrBar} set={setSection} />}
-              {tab==='log'  && <LogisticsView logistics={logistics} prep={prep} set={setSection} />}
-              {tab==='box'  && <BoxesView boxes={boxes} addBox={addBox} updateBox={updateBox} delBox={delBox} />}
-              {tab==='buy'  && <PurchasesView items={purchases} set={setSection} />}
-              {tab==='mov'  && <MoversView movers={movers} set={setSection} />}
-              {tab==='note' && <ListBlock title="פתקים כלליים" subtitle="דברים כלליים שלא נשכח" icon={<Icon.Note size={18}/>} accent="amber" items={notes} onChange={v=>setSection('notes', v)} />}
-              <div className="h-8" />
-            </main>
-          </div>
-
-          {saveErr && (
-            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-rose-600 text-white text-sm rounded-xl px-4 py-2.5 shadow-lg flex items-center gap-2 pop"><Icon.Alert size={16}/> לא נשמר — בדוק חיבור</div>
-          )}
-        </div>
-      );
-    }
-
-    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
-  </script>
+</script>
 </body>
 </html>
