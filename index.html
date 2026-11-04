@@ -77,7 +77,7 @@ h1,h2,p{margin:0}
 .stack{display:flex;flex-direction:column;gap:14px}
 
 .bottom{position:fixed;inset:auto 0 0 0;z-index:35;background:var(--surface);border-top:1px solid var(--line);
-  display:grid;grid-template-columns:repeat(5,1fr);
+  display:grid;grid-template-columns:repeat(6,1fr);
   padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
 body.typing .bottom{display:none}
 .nav-btn{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:58px;font-size:12px;font-weight:600;color:var(--ink-2)}
@@ -245,6 +245,61 @@ textarea.fld{resize:vertical;min-height:84px;line-height:1.5}
 .meters .fld{background:var(--sunk);font-variant-numeric:tabular-nums}
 .meters .fld:focus{background:var(--surface)}
 
+/* schedule */
+.fld[type=date],.fld[type=time],.fld[type=datetime-local]{min-height:42px}
+.sched-head{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.days{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.days::-webkit-scrollbar{display:none}
+.day{flex:1 0 46px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 4px 6px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);font-size:12px;font-weight:600;text-align:center}
+.day b{font-family:var(--f-display);font-weight:400;font-size:20px;line-height:1.15;color:var(--ink);font-variant-numeric:tabular-nums}
+.day.all b{font-family:var(--f-body);font-weight:700;font-size:15px;line-height:1.6}
+.day.move{box-shadow:inset 0 0 0 2px var(--tape);border-color:var(--tape)}
+.day.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.day.on b{color:var(--on-accent)}
+.pips{display:flex;gap:3px;height:5px;justify-content:center}
+.pips i{width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.day.on .pips i{background:var(--on-accent)}
+.dhead{display:flex;align-items:center;gap:8px;padding:14px 16px 10px;flex-wrap:wrap}
+.dhead .h2{margin-inline-end:auto}
+.move-tag{background:var(--tape);color:var(--on-tape)}
+.ev{display:flex;align-items:flex-start;gap:8px;border-top:1px solid var(--line);padding-inline-end:12px}
+.ev-body{flex:1;min-width:0;display:flex;gap:12px;align-items:flex-start;padding:12px 6px 12px 14px;padding-inline-start:16px}
+.ev-body:disabled{cursor:default}
+.ev-time{flex:none;width:50px;font-variant-numeric:tabular-nums;font-weight:700;font-size:15px;line-height:1.3;text-align:start}
+.ev-time small{display:block;color:var(--ink-3);font-weight:600;font-size:13px}
+.ev-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ev-title{font-weight:700;font-size:16px;line-height:1.3;overflow-wrap:anywhere}
+.ev-meta{font-size:13px;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:2px 10px}
+.conflict{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:var(--danger)}
+.ev-side{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding-top:12px}
+.ev-side .acts{display:flex;gap:6px}
+.ev.past .ev-body{opacity:.55}
+.ev.virtual{background:var(--sunk)}
+.sync-chip{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.sync-ok{background:var(--accent-soft);color:var(--accent)}
+.sync-wait{background:var(--sunk);color:var(--ink-2)}
+.sync-err{background:var(--danger-soft);color:var(--danger)}
+.mini-link{font-size:13px;font-weight:700;color:var(--accent);text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.icon-btn.sm{width:34px;height:34px;border-radius:50%}
+.ev-form .form-grid{padding-top:8px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.preset{font-size:14px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--sunk);color:var(--ink-2)}
+.preset.on{background:var(--accent-soft);color:var(--accent)}
+.time-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.time-row>div:first-child{grid-column:1/-1}
+.time-row>div{min-width:0}
+.quick-days{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:8px}
+.quick-days::-webkit-scrollbar{display:none}
+.quick-days .preset{flex:none;font-variant-numeric:tabular-nums}
+.seg.wide{display:flex;width:100%}
+.seg.wide button{flex:1;padding:8px 4px;font-size:14px;text-align:center}
+.invite-note{margin:0 16px 12px;padding:10px 12px;border-radius:10px;background:var(--accent-soft);color:var(--ink);font-size:14px;line-height:1.5}
+.invite-note bdi{font-weight:700;overflow-wrap:anywhere}
+.form-actions{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:0 16px 16px}
+.form-actions .grow{display:flex;gap:10px;align-items:center;margin-inline-start:auto}
+.btn:disabled{background:var(--sunk);color:var(--ink-3)}
+.past-toggle{border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+
 /* toast */
 .toast{position:fixed;z-index:50;inset-inline:max(16px,env(safe-area-inset-left,0px));bottom:calc(74px + env(safe-area-inset-bottom,0px));margin:0 auto;max-width:420px;
   display:flex;align-items:center;gap:12px;background:var(--ink);color:var(--bg);border-radius:12px;padding:12px 14px;font-size:15px;box-shadow:var(--shadow)}
@@ -288,6 +343,7 @@ let db = null;
 try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); } catch (e) { console.error(e); }
 const sectionDoc = k => db.collection('moving').doc(k);
 const boxesCol = () => db.collection('moving_boxes');
+const eventsCol = () => db.collection('moving_events');
 
 /* ---------- icons ---------- */
 const ICONS = {
@@ -303,6 +359,8 @@ const ICONS = {
   chev: '<path d="m6 9 6 6 6-6"/>',
   copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
   phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+  cal: '<rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/>',
+  alert: '<path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5M12 17.5h.01"/>',
   truck: '<path d="M2 6.5h12v9H2zM14 9.5h4l3 3v3h-7"/><circle cx="6" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
 };
 function Icon({ n, s = 20 }) {
@@ -369,6 +427,7 @@ const STATUS = { open: 'בהכנה', closed: 'סגור', unpacked: 'נפרק' };
 const STATUS_NEXT = { open: 'closed', closed: 'unpacked', unpacked: 'open' };
 const TABS = [
   { id: 'home', label: 'סקירה', icon: 'home' },
+  { id: 'schedule', label: 'לו״ז', icon: 'cal' },
   { id: 'address', label: 'כתובות', icon: 'pin' },
   { id: 'prep', label: 'הכנות', icon: 'list' },
   { id: 'boxes', label: 'ארגזים', icon: 'box' },
@@ -542,7 +601,7 @@ function computeAreas(S, boxes) {
   ];
 }
 
-function Home({ S, boxes, go }) {
+function Home({ S, boxes, events, go }) {
   const movers = S.movers || {};
   const purchases = S.purchases || [];
   const areas = computeAreas(S, boxes);
@@ -571,6 +630,8 @@ function Home({ S, boxes, go }) {
         </div>
       </div>
     </section>
+
+    <${UpNext} events=${events} go=${go} />
 
     <section className="card">
       <div className="sec-title"><h2 className="h2">איפה אנחנו עומדים</h2><span className="muted">כל תחום שווה חלק שווה</span></div>
@@ -742,11 +803,258 @@ function Purchases({ purchases }) {
   </section>`;
 }
 
+/* ---------- schedule: move week ----------
+   Each appointment is a doc in moving_events. Saving marks it needsSync, and the
+   Apps Script in calendar-sync.gs picks it up within a minute and sends the invite. */
+const INVITEES = ['dorbi222@gmail.com', 'barkoren1912@gmail.com'];
+const PLACE_ADDR = { new: 'בנטל 2, דירה 10, כפר יונה', old: 'הדרים 7/11, כפר יונה', other: '' };
+const PLACES = [['new', 'בנטל'], ['old', 'הדרים'], ['other', 'אחר']];
+const PRESETS = [
+  { t: 'התקנת תמי 4', d: 120, place: 'new' },
+  { t: 'התקנת אינטרנט', d: 120, place: 'new' },
+  { t: 'חשמלאי', d: 120, place: 'new' },
+  { t: 'אינסטלטור', d: 90, place: 'new' },
+  { t: 'טכנאי מזגנים', d: 120, place: 'new' },
+  { t: 'ניקיון', d: 240, place: 'new' },
+  { t: 'הדברה', d: 90, place: 'new' },
+  { t: 'מנעולן', d: 60, place: 'new' },
+  { t: 'אספקת מקרר', d: 120, place: 'new' },
+  { t: 'מסירת מפתחות', d: 60, place: 'old' },
+];
+const pad = n => String(n).padStart(2, '0');
+const isoDay = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const todayIso = () => isoDay(new Date());
+const parseDay = s => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1); };
+const addDays = (s, n) => { const d = parseDay(s); d.setDate(d.getDate() + n); return isoDay(d); };
+const toMin = t => { const [h, m] = String(t || '0:0').split(':').map(Number); return (h || 0) * 60 + (m || 0); };
+const fromMin = m => { m = Math.max(0, Math.min(23 * 60 + 59, m)); return pad(Math.floor(m / 60)) + ':' + pad(m % 60); };
+const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+const dayLabel = s => new Intl.DateTimeFormat('he-IL', { weekday: 'long', day: 'numeric', month: 'long' }).format(parseDay(s));
+const dayNarrow = s => new Intl.DateTimeFormat('he-IL', { weekday: 'narrow' }).format(parseDay(s));
+const dayChip = s => `${dayNarrow(s)} ${parseDay(s).getDate()}/${parseDay(s).getMonth() + 1}`;
+const isPast = e => { const t = todayIso(); return e.date < t || (e.date === t && toMin(e.end || e.start) < nowMin()); };
+const byWhen = (a, b) => (a.date + a.start).localeCompare(b.date + b.start);
+const STALE_MS = 3 * 60 * 1000;
+
+function evDetails(e) {
+  return [e.contact && 'ספק / איש קשר: ' + e.contact, e.phone && 'טלפון: ' + e.phone, e.who && 'מי פוגש: ' + WHO_LABEL[e.who], e.notes,
+    'נרשם בלו״ז המעבר: https://dorbi222.github.io/moving/#schedule'].filter(Boolean).join('\n');
+}
+function gcalLink(e) {
+  const f = (d, t) => String(d).replace(/-/g, '') + 'T' + String(t || '00:00').replace(':', '') + '00';
+  const p = new URLSearchParams({ action: 'TEMPLATE', text: e.title, dates: f(e.date, e.start) + '/' + f(e.date, e.end || e.start),
+    ctz: 'Asia/Jerusalem', location: e.location || '', details: evDetails(e), add: INVITEES.join(',') });
+  return 'https://calendar.google.com/calendar/render?' + p.toString();
+}
+function conflictsOf(list) {
+  const out = new Set(), byDay = {};
+  list.forEach(e => (byDay[e.date] = byDay[e.date] || []).push(e));
+  Object.values(byDay).forEach(a => {
+    for (let i = 0; i < a.length; i++) for (let j = i + 1; j < a.length; j++) {
+      const x = a[i], y = a[j];
+      if (toMin(x.start) < toMin(y.end || y.start) && toMin(y.start) < toMin(x.end || x.start)) { out.add(x.id); out.add(y.id); }
+    }
+  });
+  return out;
+}
+function moveEvent(movers) {
+  const d = String((movers || {}).date || '');
+  if (!d.includes('T')) return null;
+  const start = d.slice(11, 16);
+  return { id: 'movers', virtual: true, title: 'ההובלה' + (movers.company ? ' · ' + movers.company : ''), date: d.slice(0, 10),
+    start, end: fromMin(toMin(start) + 240), contact: movers.contact || '', phone: movers.phone || '' };
+}
+
+const evApi = {
+  save(id, data) {
+    const body = { ...data, needsSync: true, syncState: 'pending', syncError: '', deleted: false, rev: Date.now(), updatedAt: Date.now() };
+    if (!id) { const ref = eventsCol().doc(); api.track(ref.set({ ...body, createdAt: Date.now() })); return ref.id; }
+    api.track(eventsCol().doc(id).update(body)); return id;
+  },
+  remove(e) {
+    const body = { ...e }; delete body.id;
+    api.track(eventsCol().doc(e.id).update({ deleted: true, needsSync: true, updatedAt: Date.now() }));
+    api.hooks.undo('הפגישה נמחקה', () => api.track(eventsCol().doc(e.id).set({ ...body, deleted: false, needsSync: true, syncState: 'pending', rev: Date.now(), updatedAt: Date.now() })));
+  },
+  retry(e) { api.track(eventsCol().doc(e.id).update({ needsSync: true, syncState: 'pending', syncError: '', rev: Date.now(), updatedAt: Date.now() })); },
+};
+
+const noEnter = e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } };
+
+function EventForm({ initial, defDay, week, onClose }) {
+  const ro = useContext(RO);
+  const [f, setF] = useState(() => initial
+    ? { title: initial.title || '', date: initial.date || defDay, start: initial.start || '09:00', end: initial.end || '', contact: initial.contact || '', phone: initial.phone || '', place: initial.place || 'new', location: initial.location ?? PLACE_ADDR.new, who: initial.who || '', notes: initial.notes || '' }
+    : { title: '', date: defDay, start: '09:00', end: '11:00', contact: '', phone: '', place: 'new', location: PLACE_ADDR.new, who: '', notes: '' });
+  const set = patch => setF(x => ({ ...x, ...patch }));
+  const dur = Math.max(15, toMin(f.end) - toMin(f.start));
+  const setStart = v => set({ start: v, end: v ? fromMin(toMin(v) + dur) : f.end });
+  const pickPreset = p => set({ title: p.t, end: fromMin(toMin(f.start) + p.d), place: p.place, location: PLACE_ADDR[p.place] });
+  const setPlace = k => set({ place: k, location: PLACE_ADDR[k] });
+  const valid = !!(f.title.trim() && f.date && f.start);
+  useEffect(() => { window.scrollTo({ top: 0 }); }, []);
+  const submit = e => {
+    e.preventDefault(); if (!valid || ro) return;
+    const end = f.end && toMin(f.end) > toMin(f.start) ? f.end : fromMin(toMin(f.start) + 60);
+    evApi.save(initial && initial.id, { ...f, end, title: f.title.trim(), contact: f.contact.trim(), phone: f.phone.trim(), location: String(f.location || '').trim(), notes: f.notes.trim() });
+    onClose(initial ? 'הפגישה עודכנה. היומן יתעדכן תוך דקה' : 'נוסף ללו״ז. הזימון יגיע לשניכם תוך דקה');
+  };
+  return html`<form className="card ev-form" onSubmit=${submit}>
+    <div className="sec-title"><h2 className="h2">${initial ? 'עריכת פגישה' : 'פגישה חדשה'}</h2><button type="button" className="btn-ghost" onClick=${() => onClose()}>ביטול</button></div>
+    <div className="form-grid">
+      <div className="full">
+        <label className="lbl" htmlFor="ev-title">מה מתוכנן?</label>
+        <input id="ev-title" className="fld" dir="auto" value=${f.title} onChange=${e => set({ title: e.target.value })} onKeyDown=${noEnter} placeholder="למשל: התקנת תמי 4" autoComplete="off" enterKeyHint="next" />
+        ${!initial && html`<div className="presets">${PRESETS.map(p => html`<button type="button" key=${p.t} className=${'preset' + (f.title === p.t ? ' on' : '')} onClick=${() => pickPreset(p)}>${p.t}</button>`)}</div>`}
+      </div>
+      <div className="full">
+        <div className="time-row">
+          <div><label className="lbl" htmlFor="ev-date">תאריך</label><input id="ev-date" type="date" className="fld ltr" dir="ltr" value=${f.date} onChange=${e => set({ date: e.target.value })} required /></div>
+          <div><label className="lbl" htmlFor="ev-start">משעה</label><input id="ev-start" type="time" step="900" className="fld ltr" dir="ltr" value=${f.start} onChange=${e => setStart(e.target.value)} required /></div>
+          <div><label className="lbl" htmlFor="ev-end">עד</label><input id="ev-end" type="time" step="900" className="fld ltr" dir="ltr" value=${f.end} onChange=${e => set({ end: e.target.value })} /></div>
+        </div>
+        <div className="quick-days" role="group" aria-label="בחירה מהירה של יום">${week.map(d => html`<button type="button" key=${d} className=${'preset' + (f.date === d ? ' on' : '')} onClick=${() => set({ date: d })}>${dayChip(d)}</button>`)}</div>
+      </div>
+      <div><label className="lbl" htmlFor="ev-contact">ספק / איש קשר</label><input id="ev-contact" className="fld" dir="auto" value=${f.contact} onChange=${e => set({ contact: e.target.value })} onKeyDown=${noEnter} placeholder="שם הטכנאי או החברה" autoComplete="off" /></div>
+      <div><label className="lbl" htmlFor="ev-phone">טלפון</label><input id="ev-phone" type="tel" inputMode="tel" className="fld ltr" dir="ltr" value=${f.phone} onChange=${e => set({ phone: e.target.value })} onKeyDown=${noEnter} placeholder="050-0000000" autoComplete="off" /></div>
+      <div className="full">
+        <span className="lbl">איפה</span>
+        <div className="seg wide" role="group" aria-label="מיקום">${PLACES.map(([k, l]) => html`<button type="button" key=${k} className=${f.place === k ? 'on' : ''} aria-pressed=${f.place === k} onClick=${() => setPlace(k)}>${l}</button>`)}</div>
+        ${f.place === 'other' && html`<input id="ev-loc" className="fld" style=${{ marginTop: 8 }} dir="auto" value=${f.location} onChange=${e => set({ location: e.target.value })} onKeyDown=${noEnter} placeholder="כתובת" autoComplete="off" />`}
+      </div>
+      <div className="full">
+        <span className="lbl">מי פוגש אותו?</span>
+        <div className="seg wide" role="group" aria-label="מי פוגש">${[['dor', 'דור'], ['bar', 'בר'], ['both', 'שנינו'], ['', 'לא סגור']].map(([k, l]) => html`<button type="button" key=${k || 'none'} className=${f.who === k ? 'on' : ''} aria-pressed=${f.who === k} onClick=${() => set({ who: k })}>${l}</button>`)}</div>
+      </div>
+      <div className="full"><label className="lbl" htmlFor="ev-notes">הערות</label><textarea id="ev-notes" className="fld" rows="2" dir="auto" value=${f.notes} onChange=${e => set({ notes: e.target.value })} placeholder="קוד לבניין, מה להכין, מה לבקש מהטכנאי…"></textarea></div>
+    </div>
+    <p className="invite-note">הזימון יישלח ל־<bdi dir="ltr">${INVITEES[0]}</bdi> ול־<bdi dir="ltr">${INVITEES[1]}</bdi></p>
+    <div className="form-actions">
+      ${initial && !ro ? html`<button type="button" className="btn-ghost danger" onClick=${() => { evApi.remove(initial); onClose(); }}>מחק פגישה</button>` : null}
+      <div className="grow">
+        ${initial && valid ? html`<a className="mini-link" href=${gcalLink({ ...f, end: f.end || f.start })} target="_blank" rel="noopener">הוספה ידנית ליומן</a>` : null}
+        <button className="btn" type="submit" disabled=${!valid || ro}>${initial ? 'שמירה' : 'הוספה ושליחת זימון'}</button>
+      </div>
+    </div>
+  </form>`;
+}
+
+function EventRow({ e, conflict, onEdit, go }) {
+  const ro = useContext(RO);
+  const past = isPast(e);
+  const stale = !e.virtual && e.syncState !== 'synced' && Date.now() - (e.updatedAt || 0) > STALE_MS;
+  const chip = e.virtual ? null : e.syncState === 'synced' ? ['ok', 'ביומן של שניכם'] : e.syncState === 'error' ? ['err', 'השליחה נכשלה'] : ['wait', 'ממתין ליומן'];
+  const place = e.place === 'old' ? 'הדרים' : e.place === 'other' ? (e.location || '') : e.virtual ? '' : 'בנטל';
+  const tel = String(e.phone || '').replace(/[^\d+]/g, '');
+  return html`<li className=${'ev' + (past ? ' past' : '') + (e.virtual ? ' virtual' : '')}>
+    <button className="ev-body" disabled=${ro && !e.virtual} onClick=${() => (e.virtual ? go('budget') : onEdit(e))} aria-label=${'עריכת ' + e.title}>
+      <span className="ev-time"><bdi>${e.start}</bdi>${e.virtual ? html`<small>התחלה</small>` : html`<small><bdi>${e.end}</bdi></small>`}</span>
+      <span className="ev-main">
+        <span className="ev-title" dir="auto">${e.title}</span>
+        <span className="ev-meta">
+          ${e.contact && html`<span dir="auto">${e.contact}</span>`}
+          ${place && html`<span>${place}</span>`}
+          ${e.who && html`<span>פוגש: ${WHO_LABEL[e.who]}</span>`}
+        </span>
+        ${conflict && html`<span className="conflict"><${Icon} n="alert" s=${14} />חופף לפגישה אחרת</span>`}
+        ${e.syncState === 'error' && e.syncError && html`<span className="muted" dir="auto">${e.syncError}</span>`}
+      </span>
+    </button>
+    <div className="ev-side">
+      ${chip && html`<span className=${'sync-chip sync-' + chip[0]}>${chip[1]}</span>`}
+      <div className="acts">
+        ${tel && html`<a className="icon-btn sm" href=${'tel:' + tel} aria-label=${'חיוג ל' + (e.contact || 'ספק')}><${Icon} n="phone" s=${16} /></a>`}
+      </div>
+      ${!e.virtual && e.syncState === 'error' && !ro && html`<button className="mini-link" onClick=${() => evApi.retry(e)}>נסו שוב</button>`}
+      ${!e.virtual && (stale || e.syncState === 'error') && html`<a className="mini-link" href=${gcalLink(e)} target="_blank" rel="noopener">הוספה ידנית</a>`}
+    </div>
+  </li>`;
+}
+
+function Schedule({ events, movers, go, toast }) {
+  const ro = useContext(RO);
+  const [sel, setSel] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [showPast, setShowPast] = useState(false);
+  const today = todayIso();
+  const moveDay = (movers && movers.date) ? String(movers.date).slice(0, 10) : null;
+  const anchor = moveDay || today;
+  const week = Array.from({ length: 7 }, (_, i) => addDays(anchor, i - 3));
+  const mv = moveEvent(movers);
+  const all = [...events.filter(e => !e.deleted && e.date), ...(mv ? [mv] : [])].sort(byWhen);
+  const conflicts = conflictsOf(all);
+  const past = all.filter(isPast), upcoming = all.filter(e => !isPast(e));
+  const shown = sel ? all.filter(e => e.date === sel) : (showPast ? all : upcoming);
+  const groups = [];
+  shown.forEach(e => { const g = groups[groups.length - 1]; if (g && g[0] === e.date) g[1].push(e); else groups.push([e.date, [e]]); });
+  const real = events.filter(e => !e.deleted);
+  const notConnected = !real.some(e => e.syncState === 'synced') && real.some(e => e.syncState !== 'synced' && Date.now() - (e.updatedAt || 0) > STALE_MS);
+  const defDay = sel || (week.includes(today) ? today : anchor);
+  const close = msg => { setEditing(null); if (msg) toast({ msg }); };
+
+  if (editing) return html`<${EventForm} initial=${editing === 'new' ? null : editing} defDay=${defDay} week=${week} onClose=${close} />`;
+
+  return html`<div className="stack">
+    <div className="toolbar">
+      <div className="sched-head">
+        <p className="h2">שבוע המעבר</p>
+        <p className="muted">${moveDay ? 'ההובלה ב' + dayLabel(moveDay) : html`<button className="link" onClick=${() => go('budget')}>קבעו תאריך הובלה</button> כדי למרכז את השבוע סביבו`}</p>
+      </div>
+      ${!ro && html`<button className="btn" onClick=${() => setEditing('new')}><${Icon} n="plus" s=${18} />פגישה</button>`}
+    </div>
+
+    <div className="days" role="group" aria-label="ימי שבוע המעבר">
+      <button className=${'day all' + (sel ? '' : ' on')} aria-pressed=${!sel} onClick=${() => setSel(null)}><span>לו״ז</span><b>הכל</b><span className="pips"></span></button>
+      ${week.map(d => {
+        const n = all.filter(e => e.date === d).length;
+        return html`<button key=${d} className=${'day' + (sel === d ? ' on' : '') + (d === moveDay ? ' move' : '')} aria-pressed=${sel === d}
+          aria-label=${dayLabel(d) + (n ? `, ${n} פגישות` : '')} onClick=${() => setSel(sel === d ? null : d)}>
+          <span>${d === today ? 'היום' : dayNarrow(d)}</span><b>${parseDay(d).getDate()}</b>
+          <span className="pips">${Array.from({ length: Math.min(n, 3) }, (_, i) => html`<i key=${i}></i>`)}</span>
+        </button>`;
+      })}
+    </div>
+
+    ${notConnected && html`<p className="note">הזימונים עוד לא יוצאים אוטומטית, כי החיבור ליומן עוד לא הוגדר. בינתיים אפשר ללחוץ על ״הוספה ידנית״ ליד כל פגישה.</p>`}
+
+    ${groups.length === 0 ? html`<div className="card card-pad">
+        <p className="h2">${sel ? 'אין כלום ב' + dayLabel(sel) : 'הלו״ז ריק'}</p>
+        <p className="muted">תיאמתם טכנאי או ספק? רשמו אותו כאן, וזימון יישלח ליומן של שניכם.</p>
+        ${!ro && html`<button className="btn" style=${{ marginTop: 12 }} onClick=${() => setEditing('new')}><${Icon} n="plus" s=${18} />הוספת פגישה</button>`}
+      </div>`
+      : groups.map(([d, evs]) => html`<section className="card" key=${d}>
+        <div className="dhead">
+          <h2 className="h2">${dayLabel(d)}</h2>
+          ${d === moveDay && html`<span className="pill move-tag">יום ההובלה</span>`}
+          ${d === today && html`<span className="pill">היום</span>`}
+        </div>
+        <ul className="rows">${evs.map(e => html`<${EventRow} key=${e.id} e=${e} conflict=${conflicts.has(e.id)} onEdit=${setEditing} go=${go} />`)}</ul>
+      </section>`)}
+
+    ${!sel && past.length > 0 && html`<button className="done-toggle past-toggle" onClick=${() => setShowPast(!showPast)}>${showPast ? 'הסתר' : 'הצג'} ${past.length} שכבר עברו</button>`}
+  </div>`;
+}
+
+function UpNext({ events, go }) {
+  const up = events.filter(e => !e.deleted && e.date && !isPast(e)).sort(byWhen).slice(0, 3);
+  return html`<section className="card">
+    <div className="sec-title"><h2 className="h2">בלו״ז הקרוב</h2><button className="mini-link" onClick=${() => go('schedule')}>לכל הלו״ז</button></div>
+    ${up.length === 0 ? html`<p className="empty">אין עדיין פגישות עם ספקים. <button className="link" onClick=${() => go('schedule')}>הוסיפו את הראשונה</button></p>`
+      : html`<ul className="rows">${up.map(e => html`<li key=${e.id} className="ev">
+          <button className="ev-body" onClick=${() => go('schedule')}>
+            <span className="ev-time"><bdi>${e.start}</bdi><small><bdi>${e.end}</bdi></small></span>
+            <span className="ev-main"><span className="ev-title" dir="auto">${e.title}</span><span className="ev-meta"><span>${e.date === todayIso() ? 'היום' : dayLabel(e.date)}</span>${e.contact && html`<span dir="auto">${e.contact}</span>`}</span></span>
+          </button>
+        </li>`)}</ul>`}
+  </section>`;
+}
+
 /* ---------- app ---------- */
 function App() {
   const [tab, setTab] = useState(() => validTab(location.hash.slice(1)) || 'home');
   const [S, setS] = useState({});
   const [boxes, setBoxes] = useState([]);
+  const [events, setEvents] = useState([]);
   const [got, setGot] = useState({});
   const [conn, setConn] = useState(db ? 'connecting' : 'off');
   const [pending, setPending] = useState(0);
@@ -780,6 +1088,10 @@ function App() {
       setBoxes(snap.docs.map(d => ({ ...d.data(), id: d.id })));
       mark('boxes');
     }, err => { console.error(err); setConn('off'); mark('boxes'); }));
+    unsubs.push(eventsCol().onSnapshot(snap => {
+      setEvents(snap.docs.map(d => ({ ...d.data(), id: d.id })));
+      mark('events');
+    }, err => { console.error(err); mark('events'); }));
     const fallback = setTimeout(() => setGot(g => ({ ...g, all: true })), 5000);
     return () => { unsubs.forEach(f => f()); clearTimeout(fallback); };
   }, []);
@@ -800,9 +1112,10 @@ function App() {
 
   const go = t => { setTab(t); try { if (location.hash !== '#' + t) location.hash = t; } catch (e) {} window.scrollTo({ top: 0 }); };
 
-  const ready = conn === 'off' || got.all || (SECTION_KEYS.every(k => got[k]) && got.boxes);
+  const ready = conn === 'off' || got.all || (SECTION_KEYS.every(k => got[k]) && got.boxes && got.events);
   const openCount = ks => ks.reduce((n, k) => n + (S[k] || []).filter(t => !t.done).length, 0);
   const badges = {
+    schedule: events.filter(e => !e.deleted && e.date && !isPast(e)).length,
     address: openCount(['address_shared', 'address_dor', 'address_bar']),
     prep: openCount(['logistics', 'prep', 'notes']),
     boxes: boxes.filter(b => (b.status || 'open') === 'open').length,
@@ -817,7 +1130,8 @@ function App() {
 
   let view;
   if (!ready) view = html`<div className="stack"><div className="card skel" style=${{ height: 170 }}></div><div className="card skel" style=${{ height: 240 }}></div><div className="card skel" style=${{ height: 120 }}></div></div>`;
-  else if (tab === 'home') view = html`<${Home} S=${S} boxes=${boxes} go=${go} />`;
+  else if (tab === 'home') view = html`<${Home} S=${S} boxes=${boxes} events=${events} go=${go} />`;
+  else if (tab === 'schedule') view = html`<${Schedule} events=${events} movers=${S.movers} go=${go} toast=${showToast} />`;
   else if (tab === 'address') view = html`<div className="stack">${['address_shared', 'address_dor', 'address_bar'].map(k => html`<${TaskList} key=${k} k=${k} items=${S[k]} />`)}</div>`;
   else if (tab === 'prep') view = html`<div className="stack"><${TaskList} k="logistics" items=${S.logistics} /><${TaskList} k="prep" items=${S.prep} /><${Meters} meters=${S.meters} /><${TaskList} k="notes" items=${S.notes} /></div>`;
   else if (tab === 'boxes') view = html`<${Boxes} boxes=${boxes} />`;
