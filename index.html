@@ -67,6 +67,11 @@ h1,h2,p{margin:0}
 .top-inner{display:flex;align-items:center;gap:12px;width:100%;max-width:760px;margin:0 auto}
 .brand{font-family:var(--f-display);font-size:22px;line-height:1.1;font-weight:400;text-wrap:balance}
 .brand-sub{color:var(--ink-2);font-size:13px}
+.kit-btn{margin-inline-start:auto;flex:none;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 10px 0 8px;border-radius:999px;background:var(--tape);color:var(--on-tape);font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.kit-btn.on{background:var(--accent);color:var(--on-accent)}
+.kit-btn .lbl-wide{display:none}
+@media (min-width:600px){.kit-btn .lbl-wide{display:inline}}
+.kit-btn + .sync{margin-inline-start:0}
 .sync{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);padding:4px 10px;border-radius:999px;white-space:nowrap}
 .sync i{width:8px;height:8px;border-radius:50%;background:var(--accent)}
 .sync.saving i{background:var(--warn)}
@@ -293,6 +298,20 @@ textarea.fld{resize:vertical;min-height:84px;line-height:1.5}
 .btn:disabled{background:var(--sunk);color:var(--ink-3)}
 .past-toggle{border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 
+/* move-in kit */
+.kit-sum{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.kit-sum .grow{flex:1;min-width:180px;display:flex;flex-direction:column;gap:6px}
+.rooms{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 16px 10px}
+.rooms::-webkit-scrollbar{display:none}
+.rooms .preset{flex:none}
+.ideas{padding:2px 16px 14px;display:flex;flex-direction:column;gap:8px}
+.ideas .presets{margin-top:0}
+.idea{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:600;padding:5px 10px 5px 12px;border-radius:999px;border:1.5px dashed var(--line);color:var(--ink-2);background:transparent}
+.idea:hover{border-color:var(--accent);color:var(--accent)}
+.idea .ic{color:var(--accent)}
+.kit-row{min-height:54px}
+.kit-row .chk{width:30px;height:30px}
+
 /* toast */
 .toast{position:fixed;z-index:50;inset-inline:max(16px,env(safe-area-inset-left,0px));bottom:calc(74px + env(safe-area-inset-bottom,0px));margin:0 auto;max-width:420px;
   display:flex;align-items:center;gap:12px;background:var(--ink);color:var(--bg);border-radius:12px;padding:12px 14px;font-size:15px;box-shadow:var(--shadow)}
@@ -350,6 +369,7 @@ const ICONS = {
   plus: '<path d="M12 5v14M5 12h14"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/>',
   chev: '<path d="m6 9 6 6 6-6"/>',
+  cart: '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3.5h2.6l2.3 11.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1L21 7.5H6.2"/>',
   copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
   phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
   cal: '<rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/>',
@@ -401,6 +421,7 @@ const D = {
   notes: ['לקחת מפתחות מבעל הבית הישן', 'להחזיר פיקדון על הדירה הישנה', 'לעדכן כתובת בוויז/ניווט'].map(li),
   purchases: [{ id: uid(), text: 'מקרר', cost: 0, done: false }, { id: uid(), text: 'ארון כביסה', cost: 0, done: false }],
   movers: { company: '', contact: '', phone: '', cost: 0, paid: 0, date: '', notes: '' },
+  essentials: [{ id: uid(), text: 'קולבים', done: false, room: 'bedroom' }, { id: uid(), text: 'קרש לאסלה', done: false, room: 'bath' }],
   meters: { old: {}, new: {} },
 };
 const SECTION_KEYS = Object.keys(D);
@@ -426,7 +447,7 @@ const TABS = [
   { id: 'boxes', label: 'ארגזים', icon: 'box' },
   { id: 'budget', label: 'תקציב', icon: 'wallet' },
 ];
-const validTab = t => (TABS.some(x => x.id === t) ? t : null);
+const validTab = t => (TABS.some(x => x.id === t) || t === 'kit' ? t : null);
 
 /* ---------- data layer ----------
    Lists are stored as moving/<key> = { v: [...] } (same shape as before, so existing data carries over).
@@ -590,6 +611,7 @@ function computeAreas(S, boxes) {
     { key: 'prep', label: 'הכנות ולוגיסטיקה', tab: 'prep', v: t(['logistics', 'prep', 'notes']) },
     { key: 'boxes', label: 'ארגזים סגורים', tab: 'boxes', v: [boxes.filter(b => b.status === 'closed' || b.status === 'unpacked').length, boxes.length] },
     { key: 'buy', label: 'קניות לבית', tab: 'budget', v: [purchases.filter(p => p.done).length, purchases.length] },
+    { key: 'kit', label: 'סל הכניסה', tab: 'kit', v: t(['essentials']) },
     { key: 'movers', label: 'הובלה (חברה, תאריך, מחיר, תשלום)', tab: 'budget', v: [steps.filter(Boolean).length, 4] },
   ];
 }
@@ -1016,6 +1038,71 @@ function UpNext({ events, go }) {
   </section>`;
 }
 
+/* ---------- move-in kit: the small stuff for the first days ---------- */
+const ROOMS = [['general', 'כללי'], ['kitchen', 'מטבח'], ['bath', 'אמבטיה ושירותים'], ['bedroom', 'חדר שינה'], ['clean', 'ניקיון'], ['tools', 'כלים ותיקונים']];
+const ROOM_LABEL = Object.fromEntries(ROOMS);
+const KIT_IDEAS = {
+  general: ['שטיח כניסה', 'נורות', 'סוללות', 'מטף כיבוי', 'שקיות זבל', 'פלסטרים ותרופות בסיסיות'],
+  kitchen: ['ספוג וסבון כלים', 'מגבות מטבח', 'פח למטבח', 'מתקן ייבוש כלים', 'נייר כסף ונייר אפייה', 'מגבונים'],
+  bath: ['קרש לאסלה', 'מברשת אסלה', 'מוט ווילון למקלחת', 'שטיחון אמבטיה', 'מתקן לנייר טואלט', 'נייר טואלט', 'פח קטן'],
+  bedroom: ['קולבים', 'מגן מזרן', 'מצעים לחדר', 'ווים לדלת', 'מנורת לילה'],
+  clean: ['מגב וסחבות', 'דלי', 'מטאטא ויעה', 'אקונומיקה', 'כפפות', 'חומר לניקוי חלונות'],
+  tools: ['מברגה', 'ברגים ודיבלים', 'מאריך חשמל', 'מדבקות לבד לרהיטים', 'סרט מדידה', 'פנס'],
+};
+const norm = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+
+function Kit({ items }) {
+  const ro = useContext(RO);
+  const all = items || [];
+  const [missingOnly, setMissingOnly] = usePersist('kit:missing', false);
+  const [room, setRoom] = usePersist('kit:room', 'general');
+  const cur = ROOM_LABEL[room] ? room : 'general';
+  const have = new Set(all.map(i => norm(i.text)));
+  const done = all.filter(i => i.done).length;
+  const add = text => api.addItem('essentials', { id: uid(), text, done: false, room: cur });
+  const ideas = (KIT_IDEAS[cur] || []).filter(t => !have.has(norm(t)));
+  const groups = ROOMS.map(([k, l]) => {
+    const list = all.filter(i => (ROOM_LABEL[i.room] ? i.room : 'general') === k);
+    const shown = [...list.filter(i => !i.done), ...(missingOnly ? [] : list.filter(i => i.done))];
+    return { k, l, list, shown };
+  }).filter(g => g.shown.length);
+
+  return html`<div className="stack">
+    <section className="card card-pad kit-sum">
+      <div className="grow">
+        <h2 className="h2">הדברים הקטנים לימים הראשונים</h2>
+        <span className="muted">${all.length ? `נקנו ${done} מתוך ${all.length}` : 'עוד אין פריטים ברשימה'}</span>
+        <span className="bar"><span style=${{ width: pct(done, all.length) + '%' }}></span></span>
+      </div>
+      <div className="seg" role="group" aria-label="תצוגה">
+        <button className=${missingOnly ? '' : 'on'} aria-pressed=${!missingOnly} onClick=${() => setMissingOnly(false)}>הכל</button>
+        <button className=${missingOnly ? 'on' : ''} aria-pressed=${missingOnly} onClick=${() => setMissingOnly(true)}>רק מה שחסר</button>
+      </div>
+    </section>
+
+    ${!ro && html`<section className="card">
+      <div className="sec-title"><h2 className="h2">הוספה לרשימה</h2></div>
+      <div className="rooms" role="group" aria-label="לאיזה חדר">${ROOMS.map(([k, l]) => html`<button key=${k} className=${'preset' + (cur === k ? ' on' : '')} aria-pressed=${cur === k} onClick=${() => setRoom(k)}>${l}</button>`)}</div>
+      <${QuickAdd} placeholder=${'מה צריך ל' + (cur === 'general' ? 'בית' : ROOM_LABEL[cur]) + '?'} label="פריט חדש" onAdd=${add} />
+      ${ideas.length > 0 && html`<div className="ideas">
+        <span className="eyebrow">אולי שכחתם</span>
+        <div className="presets">${ideas.map(t => html`<button key=${t} className="idea" onClick=${() => add(t)} aria-label=${'הוסף ' + t}><${Icon} n="plus" s=${14} />${t}</button>`)}</div>
+      </div>`}
+    </section>`}
+
+    ${groups.length === 0
+      ? html`<div className="card card-pad"><p className="h2">${all.length ? 'הכל נקנה' : 'הרשימה ריקה'}</p><p className="muted">${all.length ? 'אין יותר מה לקנות לכניסה. אפשר לעבור דירה.' : 'בחרו חדר, והוסיפו פריט או אחד מהרעיונות.'}</p></div>`
+      : groups.map(g => html`<section className="card" key=${g.k}>
+        <div className="sec-title"><h2 className="h2">${g.l}</h2><span className="count">${g.list.filter(i => i.done).length} מתוך ${g.list.length}</span></div>
+        <ul className="rows">${g.shown.map(i => html`<li key=${i.id} className=${'row kit-row' + (i.done ? ' done' : '')}>
+          <button className="chk" role="checkbox" aria-checked=${!!i.done} aria-label="סמן כנקנה" disabled=${ro} onClick=${() => api.patchItem('essentials', i.id, { done: !i.done })}><${Icon} n="check" s=${16} /></button>
+          <div className="row-main"><${Field} value=${i.text} label="שם הפריט" required onCommit=${v => api.patchItem('essentials', i.id, { text: v.trim() })} /></div>
+          <${Del} label=${'מחק ' + i.text} onClick=${() => api.removeItem('essentials', i.id, 'הפריט נמחק')} />
+        </li>`)}</ul>
+      </section>`)}
+  </div>`;
+}
+
 /* one broken tab shows a message instead of blanking the whole site */
 class Guard extends React.Component {
   constructor(p) { super(p); this.state = { err: null }; }
@@ -1107,7 +1194,8 @@ function App() {
 
   const syncCls = conn === 'off' ? 'off' : pending > 0 ? 'saving' : '';
   const syncTxt = conn === 'off' ? 'אין חיבור' : conn === 'connecting' ? 'מתחבר…' : pending > 0 ? 'שומר…' : 'מסונכרן';
-  const title = tab === 'home' ? 'מעבר לבנטל' : TABS.find(t => t.id === tab).label;
+  const title = tab === 'home' ? 'מעבר לבנטל' : tab === 'kit' ? 'סל הכניסה' : (TABS.find(t => t.id === tab) || TABS[0]).label;
+  const kitLeft = (S.essentials || []).filter(i => !i.done).length;
 
   let view;
   if (!ready) view = html`<div className="stack"><div className="card skel" style=${{ height: 170 }}></div><div className="card skel" style=${{ height: 240 }}></div><div className="card skel" style=${{ height: 120 }}></div></div>`;
@@ -1116,6 +1204,7 @@ function App() {
   else if (tab === 'address') view = html`<div className="stack">${['address_shared', 'address_dor', 'address_bar'].map(k => html`<${TaskList} key=${k} k=${k} items=${S[k]} />`)}</div>`;
   else if (tab === 'prep') view = html`<div className="stack"><${TaskList} k="logistics" items=${S.logistics} /><${TaskList} k="prep" items=${S.prep} /><${Meters} meters=${S.meters} /><${TaskList} k="notes" items=${S.notes} /></div>`;
   else if (tab === 'boxes') view = html`<${Boxes} boxes=${boxes} />`;
+  else if (tab === 'kit') view = html`<${Kit} items=${S.essentials} />`;
   else view = html`<div className="stack"><${Movers} movers=${S.movers} /><${Purchases} purchases=${S.purchases} /></div>`;
 
   return html`<${RO.Provider} value=${!db}>
@@ -1123,6 +1212,9 @@ function App() {
     <div className="shell">
       <header className="top"><div className="top-inner">
         <div><h1 className="brand">${title}</h1><div className="brand-sub">דור ובר · כפר יונה</div></div>
+        <button className=${'kit-btn' + (tab === 'kit' ? ' on' : '')} onClick=${() => go('kit')} aria-label=${`סל הכניסה, ${kitLeft} פריטים חסרים`}>
+          <${Icon} n="cart" s=${18} /><span className="lbl-wide">סל הכניסה</span>${kitLeft > 0 ? html`<span>${kitLeft}</span>` : null}
+        </button>
         <span className=${'sync ' + syncCls} role="status"><i></i>${syncTxt}</span>
       </div></header>
       <main className="main">
